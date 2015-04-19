@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<link href="css/style.css" rel="stylesheet">
+		<link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
+		<script src="lib/sweetalert.min.js"></script> 
+		<title>Web game pad demo</title>
+	</head>
+	<body>
+		<div id="textDiv">
+			Welcome to Gamepad.
+		</div>
+		<br>
+		<br>
+		<div id="gamePadDiv">
+			<img class="imgDiv" src="images/xbox_360_controller.png">
+			<div id="highlightButtonBallDiv">
+			<div id="highlightAxisBallDiv">
+				<!-- <div class="buttonHighlight" id="buttonA"></div>
+				<div id="buttonB"></div>
+				<div id="buttonC"></div>
+				<div id="buttonD"></div> -->
+			</div>
+		</div>
+		<script type="text/javascript">
+
+			var rAF = window.requestAnimationFrame ||
+			  window.mozRequestAnimationFrame ||
+			  window.webkitRequestAnimationFrame;
+
+			var rAFStop = window.cancelRequestAnimationFrame ||
+			  window.mozCancelRequestAnimationFrame ||
+			  window.webkitCancelRequestAnimationFrame;
+
+			var start;
+			var mainGamePadIndex = -1;
+
+			window.addEventListener("gamepadconnected", function(e) {
+
+				swal({   title: "Game pad connected!",   text: "I will close in 3 seconds.",  
+					type: "success", timer: 3000,   showConfirmButton: false });
+
+			  	console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+			    e.gamepad.index, e.gamepad.id,
+			    e.gamepad.buttons.length, e.gamepad.axes.length);
+
+			  	if ( e.gamepad.index == 0 )
+			  		mainGamePadIndex = e.gamepad.index;
+
+			  	if ( e.gamepad.index > 0 )
+			  		alert("We just support one gamepad currently.");
+
+			  var div = document.getElementById("textDiv");
+    			div.textContent += "Game pad connected";
+
+    			gameLoop();
+
+			});
+
+			window.addEventListener("gamepaddisconnected", function(e) {
+
+				swal({   title: "Game pad disconnected!",   text: "I will close in 3 seconds.",  
+					type: "warning", timer: 3000,   showConfirmButton: false });
+
+			  console.log("Gamepad disconnected from index %d: %s",
+			    e.gamepad.index, e.gamepad.id);
+			  var div = document.getElementById("textDiv");
+    			div.textContent += "Game pad disconnected";
+
+    			 rAFStop(start);
+			});
+
+			var buttonPos = [
+
+				{'x': '20%', 'y': '40%'},
+				{'x': '40%', 'y': '40%'}
+
+			];
+
+			function buttonPressed( btn, index ) {
+
+				if (typeof(btn) == "object") {
+
+					if (btn.pressed || btn.value) {
+
+						console.log("You press buttion " + index);
+						var btnBallElement = document.getElementById('highlightButtonBallDiv');	
+						var pos = buttonPos[index];
+						btnBallElement.style.top = pos.x;
+						btnBallElement.style.left = pos.y;
+					}
+					
+				}
+
+				return btn == 1.0;
+			}
+
+			function axisPressed( a ) {
+
+				if (typeof(a) == "object") {
+				    return (Math.abs(a.value) == 1.0);
+				}
+
+				return Math.abs(a) == 1.0;
+			}
+
+			function gameLoop() {
+
+				var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+				
+				if (!gamepads) {
+				    return;
+				}
+
+				var gp = gamepads[0];
+
+				for (var i = 0; i < gp.buttons.length; ++i) {
+
+					if (buttonPressed(gp.buttons[i], i)) {
+						
+					}
+				}
+
+				for (i = 0; i < gp.axes.length; ++i) {
+
+					if (i==2) {
+
+					}
+					else if (i==5) {
+
+					}
+					else if (axisPressed(gp.axes[i])) {
+						console.log("You press axes " + i + " value " + gp.axes[i]);
+					}
+				}
+
+				start = rAF(gameLoop);
+			}
+
+		</script>	
+	</body>
+</html>
