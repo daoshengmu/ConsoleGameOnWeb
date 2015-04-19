@@ -5,6 +5,7 @@
 		<meta charset="utf-8">
 		<link href="css/style.css" rel="stylesheet">
 		<link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
+		<script src="lib/jquery-1.11.2.min.js"></script>
 		<script src="lib/sweetalert.min.js"></script> 
 		<title>Web game pad demo</title>
 	</head>
@@ -14,14 +15,11 @@
 		</div>
 		<br>
 		<br>
-		<div id="gamePadDiv">
-			<img class="imgDiv" src="images/xbox_360_controller.png">
-			<div id="highlightButtonBallDiv">
-			<div id="highlightAxisBallDiv">
-				<!-- <div class="buttonHighlight" id="buttonA"></div>
-				<div id="buttonB"></div>
-				<div id="buttonC"></div>
-				<div id="buttonD"></div> -->
+		<div id="mainDiv">
+			<div id="gamePadDiv">				
+				<img class="imgDiv" src="images/xbox_360_controller.png">				
+				<div id="highlightButtonBallDiv"></div>
+				<div id="highlightAxisBallDiv"></div>
 			</div>
 		</div>
 		<script type="text/javascript">
@@ -74,8 +72,12 @@
 
 			var buttonPos = [
 
-				{'x': '20%', 'y': '40%'},
-				{'x': '40%', 'y': '40%'}
+				{'x': '22%', 'y': '28%'},
+				{'x': '22%', 'y': '50%'},
+				{'x': '18%', 'y': '39%'},
+				{'x': '26%', 'y': '39%'},
+				{'x': '40%', 'y': '20%'},
+				{'x': '25%', 'y': '20%'}
 
 			];
 
@@ -86,10 +88,11 @@
 					if (btn.pressed || btn.value) {
 
 						console.log("You press buttion " + index);
-						var btnBallElement = document.getElementById('highlightButtonBallDiv');	
+						var btnBallElement = $('#highlightButtonBallDiv')[0];	
 						var pos = buttonPos[index];
-						btnBallElement.style.top = pos.x;
-						btnBallElement.style.left = pos.y;
+						btnBallElement.style.left = pos.x;
+						btnBallElement.style.top = pos.y;
+						btnBallElement.style.display = 'block';
 					}
 					
 				}
@@ -113,6 +116,11 @@
 				if (!gamepads) {
 				    return;
 				}
+
+				// disable btn highlight
+				var btnBallElement = $('#highlightButtonBallDiv')[0];
+				btnBallElement.style.display = 'none';
+				// end of disable
 
 				var gp = gamepads[0];
 
