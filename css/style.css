@@ -43,6 +43,7 @@
 	position: absolute;
 	top: 50%;
     left: 22%;
+    display: none;
 
 	background-image: -webkit-radial-gradient(40% 40%, circle, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.4));;
 	background-image: -moz-radial-gradient(40% 40%, circle, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.4));;
