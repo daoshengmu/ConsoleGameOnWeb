@@ -71,17 +71,31 @@
 			});
 
 			var buttonPos = [
-
 				{'x': '22%', 'y': '28%'},
 				{'x': '22%', 'y': '50%'},
 				{'x': '18%', 'y': '39%'},
 				{'x': '26%', 'y': '39%'},
 				{'x': '40%', 'y': '20%'},
-				{'x': '25%', 'y': '20%'}
-
+				{'x': '25%', 'y': '20%'},
+				{'x': '12%', 'y': '17%'},
+				{'x': '42%', 'y': '39%'},
+				{'x': '12%', 'y': '-2%'},
+				{'x': '52%', 'y': '-2%'},
+				{'x': '33%', 'y': '18%'},
+				{'x': '52%', 'y': '28%'},
+				{'x': '57%', 'y': '18%'},
+				{'x': '47%', 'y': '18%'},
+				{'x': '52%', 'y': '8%'}
 			];
 
-			function buttonPressed( btn, index ) {
+			var axisPos = [
+				{'x': '17%', 'y': '26%'},
+				{'x': '9%', 'y': '26%'},
+				{'x': '13%', 'y': '39%'},
+				{'x': '13%', 'y': '18%'}
+			];
+
+			function buttonPressed(btn, index) {
 
 				if (typeof(btn) == "object") {
 
@@ -96,17 +110,29 @@
 					}
 					
 				}
-
-				return btn == 1.0;
 			}
 
-			function axisPressed( a ) {
+			function axisPressed(axis, posIndex, negIndex) {
+				 
+			 	var axisBallElement = $('#highlightAxisBallDiv')[0];	
 
-				if (typeof(a) == "object") {
-				    return (Math.abs(a.value) == 1.0);
-				}
+			    if (axis == 1) {
 
-				return Math.abs(a) == 1.0;
+					console.log("You press axis " + posIndex);
+					var pos = axisPos[posIndex];
+					axisBallElement.style.left = pos.x;
+					axisBallElement.style.top = pos.y;
+					axisBallElement.style.display = 'block';
+
+			    } else if ((posIndex != 4) && (posIndex != 10) 
+			    	&& (axis == -1)) {
+
+					console.log("You press axis " + negIndex);
+					var pos = axisPos[negIndex];
+					axisBallElement.style.left = pos.x;
+					axisBallElement.style.top = pos.y;
+					axisBallElement.style.display = 'block';
+			    }
 			}
 
 			function gameLoop() {
@@ -117,31 +143,33 @@
 				    return;
 				}
 
-				// disable btn highlight
+				// disable highlight
 				var btnBallElement = $('#highlightButtonBallDiv')[0];
 				btnBallElement.style.display = 'none';
+
+				var axisBallElement = $('#highlightAxisBallDiv')[0];
+				axisBallElement.style.display = 'none';
 				// end of disable
 
 				var gp = gamepads[0];
 
 				for (var i = 0; i < gp.buttons.length; ++i) {
 
-					if (buttonPressed(gp.buttons[i], i)) {
-						
-					}
+					buttonPressed(gp.buttons[i], i);
 				}
 
-				for (i = 0; i < gp.axes.length; ++i) {
+				for (var i = 0; i < gp.axes.length; ++i) {
 
-					if (i==2) {
+					// if (i==2) {
 
-					}
-					else if (i==5) {
+					// }
+					// else if (i==5) {
 
-					}
-					else if (axisPressed(gp.axes[i])) {
-						console.log("You press axes " + i + " value " + gp.axes[i]);
-					}
+					// }
+					// else if (axisPressed(gp.axes[i])) {
+					// 	console.log("You press axes " + i + " value " + gp.axes[i]);
+					// }
+					axisPressed(gp.axes[i], i*2, (i*2)+1);
 				}
 
 				start = rAF(gameLoop);
