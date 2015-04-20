@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 
+<!-- 
+Web Gamepad API experiment of Xbox360 controller 
+author: daoshengmu, http://dsmu.me
+date: 04/20/2015
+-->
+
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
@@ -7,16 +13,14 @@
 		<link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
 		<script src="lib/jquery-1.11.2.min.js"></script>
 		<script src="lib/sweetalert.min.js"></script> 
-		<title>Web game pad demo</title>
+		<title>Web Gamepad Demo</title>
 	</head>
 	<body>
 		<div id="textDiv">
-			Welcome to Gamepad.
+			<h2 id="gamepadTxt">Welcome to Web Gamepad Demo.<h2>
 		</div>
-		<br>
-		<br>
 		<div id="mainDiv">
-			<div id="gamePadDiv">				
+			<div id="gamepadDiv">				
 				<img class="imgDiv" src="images/xbox_360_controller.png">				
 				<div id="highlightButtonBallDiv"></div>
 				<div id="highlightAxisBallDiv"></div>
@@ -35,9 +39,77 @@
 			var start;
 			var mainGamePadIndex = -1;
 
+			// Button definitions
+			const Btn = {
+				'dPadUp' : 0,
+				'dPadDown' : 1,
+				'dPadLeft' : 2,
+				'dPadRight' : 3,
+				'backRight' : 4,
+				'backLeft' : 5,
+				'leftStick' : 6,
+				'rightStick' : 7,
+				'leftBumper' : 8,
+				'rightBumper' : 9,
+				'xbox' : 10,
+				'A' : 11,
+				'B' : 12,
+				'X' : 13,
+				'Y' : 14
+			};
+			
+			// Axis definitions
+			const Axis = {
+				'leftStickRight' : 0,
+				'leftStickLeft' : 1,
+				'leftStickDown' : 2,
+				'leftStickUp' : 3,
+				'leftTriggerPress' : 4,
+				'leftTriggerRelease' : 5,
+				'rightStickRight' : 6,
+				'rightStickLeft' : 7,
+				'rightStickDown' : 8,
+				'rightStickUp' : 9,
+				'rightTriggerPress' : 10,
+				'rightTriggerRelease' : 11
+			};
+
+			var buttonPos = [
+				{'x': '22%', 'y': '28%'}, // d-pad up
+				{'x': '22%', 'y': '50%'}, // d-pad down
+				{'x': '18%', 'y': '39%'}, // d-pad left
+				{'x': '26%', 'y': '39%'}, // d-pad right
+				{'x': '40%', 'y': '20%'}, // back right
+				{'x': '25%', 'y': '20%'}, // back left
+				{'x': '12%', 'y': '17%'}, // left stick
+				{'x': '42%', 'y': '39%'}, // right stick
+				{'x': '12%', 'y': '-2%'}, // left bumper
+				{'x': '52%', 'y': '-2%'}, // right bumper
+				{'x': '33%', 'y': '18%'}, // xbox
+				{'x': '52%', 'y': '28%'}, // A
+				{'x': '57%', 'y': '18%'}, // B
+				{'x': '47%', 'y': '18%'}, // X
+				{'x': '52%', 'y': '8%'}   // Y
+			];
+
+			var axisPos = [
+				{'x': '17%', 'y': '16%'}, // left stick - right
+				{'x': '9%', 'y': '16%'},  // left stick - left
+				{'x': '13%', 'y': '25%'}, // left stick - down
+				{'x': '13%', 'y': '8%'},  // left stick - up
+				{'x': '13%', 'y': '-2%'}, // left trigger - press
+				{'x': '13%', 'y': '-2%'}, // left trigger - release
+				{'x': '46%', 'y': '39%'}, // right stick - right
+				{'x': '40%', 'y': '39%'}, // right stick - left
+				{'x': '43%', 'y': '45%'}, // right stick - down
+				{'x': '43%', 'y': '34%'}, // right stick - up
+				{'x': '52%', 'y': '-2%'}, // right trigger - press
+				{'x': '52%', 'y': '-2%'}, // right trigger - release
+			];
+
 			window.addEventListener("gamepadconnected", function(e) {
 
-				swal({   title: "Game pad connected!",   text: "I will close in 3 seconds.",  
+				swal({ title: "Gamepad connected!",   text: "I will close in 3 seconds.",  
 					type: "success", timer: 3000,   showConfirmButton: false });
 
 			  	console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
@@ -50,8 +122,12 @@
 			  	if ( e.gamepad.index > 0 )
 			  		alert("We just support one gamepad currently.");
 
-			  var div = document.getElementById("textDiv");
-    			div.textContent += "Game pad connected";
+			  	var txt = 'Gamepad connected at index ' + e.gamepad.index 
+				+ ': ' + e.gamepad.id + '. --- ' + e.gamepad.buttons.length +
+				' buttons, ' + e.gamepad.axes.length +' axes.';
+
+			  	var div = $('#gamepadTxt')[0];
+    			div.textContent = txt;
 
     			gameLoop();
 
@@ -59,8 +135,8 @@
 
 			window.addEventListener("gamepaddisconnected", function(e) {
 
-				swal({   title: "Game pad disconnected!",   text: "I will close in 3 seconds.",  
-					type: "warning", timer: 3000,   showConfirmButton: false });
+				swal({ title: "Game pad disconnected!",   text: "I will close in 3 seconds.",  
+					type: "warning", timer: 3000, showConfirmButton: false });
 
 			  console.log("Gamepad disconnected from index %d: %s",
 			    e.gamepad.index, e.gamepad.id);
@@ -69,39 +145,6 @@
 
     			 rAFStop(start);
 			});
-
-			var buttonPos = [
-				{'x': '22%', 'y': '28%'},
-				{'x': '22%', 'y': '50%'},
-				{'x': '18%', 'y': '39%'},
-				{'x': '26%', 'y': '39%'},
-				{'x': '40%', 'y': '20%'},
-				{'x': '25%', 'y': '20%'},
-				{'x': '12%', 'y': '17%'},
-				{'x': '42%', 'y': '39%'},
-				{'x': '12%', 'y': '-2%'},
-				{'x': '52%', 'y': '-2%'},
-				{'x': '33%', 'y': '18%'},
-				{'x': '52%', 'y': '28%'},
-				{'x': '57%', 'y': '18%'},
-				{'x': '47%', 'y': '18%'},
-				{'x': '52%', 'y': '8%'}
-			];
-
-			var axisPos = [
-				{'x': '17%', 'y': '16%'},
-				{'x': '9%', 'y': '16%'},
-				{'x': '13%', 'y': '25%'},
-				{'x': '13%', 'y': '8%'},
-				{'x': '13%', 'y': '-2%'},
-				{'x': '13%', 'y': '-2%'}, 
-				{'x': '45%', 'y': '39%'}, 
-				{'x': '40%', 'y': '39%'},
-				{'x': '43%', 'y': '44%'},
-				{'x': '43%', 'y': '34%'},
-				{'x': '52%', 'y': '-2%'},
-				{'x': '52%', 'y': '-2%'},
-			];
 
 			function buttonPressed(btn, index) {
 
@@ -134,7 +177,8 @@
 
 			    } else if (axis == -1) {
 
-			    	if(negIndex == 5 || negIndex == 11)
+			    	if(negIndex == Axis.leftTriggerRelease 
+			    		|| negIndex == Axis.rightTriggerRelease)
 			    		return;
 
 					console.log("You press axis " + negIndex);
