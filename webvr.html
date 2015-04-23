@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<!-- 
+Web VR API experiment of Occulus DK2
+author: daoshengmu, http://dsmu.me
+date: 04/23/2015
+-->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<link href="css/style.css" rel="stylesheet">
+		<link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
+		<script src="lib/jquery-1.11.2.min.js"></script>
+		<script src="lib/sweetalert.min.js"></script> 
+		<title>Web VR Demo</title>
+	</head>
+	<body>
+		<div id="textDiv">
+			<h2 id="webvrTxt">Welcome to Web VR Demo.<h2>
+		</div>
+		<div id="mainDiv">
+			<div id="vrDiv">				
+				<img class="imgDiv" src="images/dk2-product.jpg">				
+				<div id="highlightButtonBallDiv"></div>
+				<div id="highlightAxisBallDiv"></div>
+			</div>
+		</div>
+		<script type="text/javascript">
+
+			var rAF = window.requestAnimationFrame ||
+			  window.mozRequestAnimationFrame ||
+			  window.webkitRequestAnimationFrame;
+
+			var rAFStop = window.cancelRequestAnimationFrame ||
+			  window.mozCancelRequestAnimationFrame ||
+			  window.webkitCancelRequestAnimationFrame;
+
+			var start;
+
+			window.addEventListener("load", function() {
+			    if (navigator.getVRDevices) {
+			        navigator.getVRDevices().then(vrDeviceCallback);
+			    } else if (navigator.mozGetVRDevices) {
+			        navigator.mozGetVRDevices(vrDeviceCallback);
+			    }
+			}, false);
+
+			function vrDeviceCallback(devices) {
+
+				if (devices.length) {
+					swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
+					type: "success", timer: 3000,   showConfirmButton: false });
+				}
+
+			}
+
+			// window.addEventListener("gamepadconnected", function(e) {
+
+			// 	swal({ title: "Gamepad connected!",   text: "I will close in 3 seconds.",  
+			// 		type: "success", timer: 3000,   showConfirmButton: false });
+
+			//   	console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+			//     e.gamepad.index, e.gamepad.id,
+			//     e.gamepad.buttons.length, e.gamepad.axes.length);
+
+			//   	if ( e.gamepad.index == 0 )
+			//   		mainGamePadIndex = e.gamepad.index;
+
+			//   	if ( e.gamepad.index > 0 )
+			//   		alert("We just support one gamepad currently.");
+
+			//   	var txt = 'Gamepad connected at index ' + e.gamepad.index 
+			// 	+ ': ' + e.gamepad.id + '. --- ' + e.gamepad.buttons.length +
+			// 	' buttons, ' + e.gamepad.axes.length +' axes.';
+
+			//   	var div = $('#gamepadTxt')[0];
+   //  			div.textContent = txt;
+
+   //  			gameLoop();
+
+			// });
+
+			// window.addEventListener("gamepaddisconnected", function(e) {
+
+			// 	swal({ title: "Game pad disconnected!",   text: "I will close in 3 seconds.",  
+			// 		type: "warning", timer: 3000, showConfirmButton: false });
+
+			//   console.log("Gamepad disconnected from index %d: %s",
+			//     e.gamepad.index, e.gamepad.id);
+			//   var div = document.getElementById("textDiv");
+   //  			div.textContent += "Game pad disconnected";
+
+   //  			 rAFStop(start);
+			// });
+
+			function gameLoop() {
+
+				start = rAF(gameLoop);
+			}
+
+		</script>	
+	</body>
+</html>
