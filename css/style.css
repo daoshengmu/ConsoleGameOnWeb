@@ -1,4 +1,9 @@
 
+body {
+	/*background-color: #000000;*/
+	margin: 0px;
+	overflow: hidden;
+}
 #mainDiv {
 	margin-left: auto;
     margin-right: auto;
