@@ -112,23 +112,38 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 
     var left = {}, right = {};
     var distScale = 1.0;
+    var fov, aspect;
+
+    function computeProjectMatrix() {
+
+    	// Compute camera projection matrices
+		var proj = (new THREE.Matrix4()).makePerspective( fov, aspect, 0.3, 10000 );
+		var h = 4 * (HMD.hScreenSize/4 - HMD.interpupillaryDistance/2) / HMD.hScreenSize;
+		left.proj = ((new THREE.Matrix4()).makeTranslation( h, 0.0, 0.0 )).multiply(proj);
+		right.proj = ((new THREE.Matrix4()).makeTranslation( -h, 0.0, 0.0 )).multiply(proj);
+    }
+
+    this.zoom = function(v) {
+
+    	fov += v;
+
+    	// update camera projection matrix.
+    	computeProjectMatrix();
+    }
+
 	this.setHMD = function(v) {
 		HMD = v;
 		// Compute aspect ratio and FOV
-		var aspect = HMD.hResolution / (2*HMD.vResolution);
+		aspect = HMD.hResolution / (2*HMD.vResolution);
 
 		// Fov is normally computed with:
 		//   THREE.Math.radToDeg( 2*Math.atan2(HMD.vScreenSize,2*HMD.eyeToScreenDistance) );
 		// But with lens distortion it is increased (see Oculus SDK Documentation)
 		var r = -1.0 - (4 * (HMD.hScreenSize/4 - HMD.lensSeparationDistance/2) / HMD.hScreenSize);
 		distScale = (HMD.distortionK[0] + HMD.distortionK[1] * Math.pow(r,2) + HMD.distortionK[2] * Math.pow(r,4) + HMD.distortionK[3] * Math.pow(r,6));
-		var fov = THREE.Math.radToDeg(2*Math.atan2(HMD.vScreenSize*distScale, 2*HMD.eyeToScreenDistance));
+		fov = THREE.Math.radToDeg(2*Math.atan2(HMD.vScreenSize*distScale, 2*HMD.eyeToScreenDistance));
 
-		// Compute camera projection matrices
-		var proj = (new THREE.Matrix4()).makePerspective( fov, aspect, 0.3, 10000 );
-		var h = 4 * (HMD.hScreenSize/4 - HMD.interpupillaryDistance/2) / HMD.hScreenSize;
-		left.proj = ((new THREE.Matrix4()).makeTranslation( h, 0.0, 0.0 )).multiply(proj);
-		right.proj = ((new THREE.Matrix4()).makeTranslation( -h, 0.0, 0.0 )).multiply(proj);
+		computeProjectMatrix();
 
 		// Compute camera transformation matrices
 		left.tranform = (new THREE.Matrix4()).makeTranslation( -worldFactor * HMD.interpupillaryDistance/2, 0.0, 0.0 );

@@ -66,7 +66,7 @@ date: 04/23/2015
 				geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
 
 				var material = new THREE.MeshBasicMaterial( {
-					map: THREE.ImageUtils.loadTexture('images/2294472375_24a3b8ef46_o.jpg')
+					map: THREE.ImageUtils.loadTexture('images/verandah-centre-equirectangular.jpg')
 				});
 
 				mesh = new THREE.Mesh(geometry, material);
@@ -155,15 +155,18 @@ date: 04/23/2015
 				if ( event.wheelDeltaY ) {
 
 					camera.fov -= event.wheelDeltaY * 0.05;
+					vrEffect.zoom( -event.wheelDeltaY * 0.05 );
 				// Opera / Explorer 9
 				} else if ( event.wheelDelta ) {
 
 					camera.fov -= event.wheelDelta * 0.05;
+					vrEffect.zoom( -event.wheelDelta * 0.05 );
 
 				// Firefox
 				} else if ( event.detail ) {
 
 					camera.fov += event.detail * 1.0;
+					vrEffect.zoom( event.detail * 1.0 );
 				}
 
 				camera.updateProjectionMatrix();
