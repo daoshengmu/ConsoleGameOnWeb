@@ -136,10 +136,11 @@ date: 04/23/2015
 					if (vrHMD && devices[i] instanceof PositionSensorVRDevice
 						&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
 						vrPosSensor = devices[i];
+
+						// We just want to get the first VR device.
+						break;
 					}
 
-					// We just want to get the first VR device.
-					break;
 				}
 
 			}
@@ -210,10 +211,29 @@ date: 04/23/2015
 				camera.target.z = 500 * Math.sin( phi ) * Math.sin( theta );
 
 				camera.lookAt( camera.target );
+				
+				// For WebVR sensor
+				if ( vrPosSensor ) {
+					var state = vrPosSensor.getState();
 
-				vrEffect.render( scene, camera );
+					if ( state.hasOrientation ) {
+
+						camera.quaternion.set(
+							state.orientation.x, 
+							state.orientation.y, 
+							state.orientation.z, 
+							state.orientation.w);
+					}
+
+					if ( state.hasPosition ) {
+
+					}
+
+				}
+
+				//vrEffect.render( scene, camera );
 				//renderer.render( scene, camera );
-				//vrDeviceEffect.render( scene, camera );
+				vrDeviceEffect.render( scene, camera );
 			}
 
 		</script>	
