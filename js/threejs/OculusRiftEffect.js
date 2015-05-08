@@ -202,8 +202,8 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		renderer.setViewport(left.viewport[0], left.viewport[1], left.viewport[2], left.viewport[3]);
 
 		RTMaterial.uniforms['lensCenter'].value = left.lensCenter;
+		
 		renderer.render( scene, pCamera, renderTarget, true );
-
 		renderer.render( finalScene, oCamera );
 
 		// Render right

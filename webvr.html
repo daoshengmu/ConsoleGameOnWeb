@@ -15,6 +15,7 @@ date: 04/23/2015
 		<script src="lib/sweetalert.min.js"></script>
 		<script src="lib/three.min.js"></script>
 		<script src="js/threejs/OculusRiftEffect.js"></script>
+		<script src="js/threejs/VREffect.js"></script>
 		<title>Web VR Demo</title>		
 	</head>
 	<body>
@@ -42,6 +43,8 @@ date: 04/23/2015
 			var start;
 			var camera, scene, renderer;
 			var vrEffect;
+			var vrHMD, vrPosSensor;
+			var vrDeviceEffect;
 
 			var isUserInteracting = false,
 			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
@@ -82,6 +85,8 @@ date: 04/23/2015
 				vrEffect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
 				vrEffect.setSize( window.innerWidth, window.innerHeight );
 
+				vrDeviceEffect = new THREE.VREffect(renderer);
+
 				container.appendChild(renderer.domElement);
 
 				window.addEventListener( 'resize', onWindowResize, false );
@@ -95,13 +100,13 @@ date: 04/23/2015
 				gameLoop();
 			}
 
-			// window.addEventListener("load", function() {
-			//     if (navigator.getVRDevices) {
-			//         navigator.getVRDevices().then(vrDeviceCallback);
-			//     } else if (navigator.mozGetVRDevices) {
-			//         navigator.mozGetVRDevices(vrDeviceCallback);
-			//     }
-			// }, false);
+			window.addEventListener("load", function() {
+			    if (navigator.getVRDevices) {
+			        navigator.getVRDevices().then(vrDeviceCallback);
+			    } else if (navigator.mozGetVRDevices) {
+			        navigator.mozGetVRDevices(vrDeviceCallback);
+			    }
+			}, false);
 
 			function onWindowResize() {
 
@@ -110,6 +115,7 @@ date: 04/23/2015
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
+				vrDeviceEffect.setSize( window.innerWidth, window.innerHeight );
 			}
 
 			function vrDeviceCallback(devices) {
@@ -117,6 +123,23 @@ date: 04/23/2015
 				if (devices.length) {
 					swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
 					type: "success", timer: 3000,   showConfirmButton: false });
+				} else {
+					return;
+				}
+
+				for (var i = 0; i < devices.length; ++i) {
+
+					if (devices[i] instanceof HMDVRDevice) {
+						vrHMD = devices[i];
+					}	
+
+					if (vrHMD && devices[i] instanceof PositionSensorVRDevice
+						&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+						vrPosSensor = devices[i];
+					}
+
+					// We just want to get the first VR device.
+					break;
 				}
 
 			}
@@ -156,17 +179,19 @@ date: 04/23/2015
 
 					camera.fov -= event.wheelDeltaY * 0.05;
 					vrEffect.zoom( -event.wheelDeltaY * 0.05 );
+					vrDeviceEffect.zoom( -event.wheelDeltaY * 0.05 );
 				// Opera / Explorer 9
 				} else if ( event.wheelDelta ) {
 
 					camera.fov -= event.wheelDelta * 0.05;
 					vrEffect.zoom( -event.wheelDelta * 0.05 );
-
+					vrDeviceEffect.zoom( -event.wheelDelta * 0.05 );
 				// Firefox
 				} else if ( event.detail ) {
 
 					camera.fov += event.detail * 1.0;
 					vrEffect.zoom( event.detail * 1.0 );
+					vrDeviceEffect.zoom( event.detail * 1.0 );
 				}
 
 				camera.updateProjectionMatrix();
@@ -188,6 +213,7 @@ date: 04/23/2015
 
 				vrEffect.render( scene, camera );
 				//renderer.render( scene, camera );
+				//vrDeviceEffect.render( scene, camera );
 			}
 
 		</script>	
