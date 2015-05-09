@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<!--Reference: 
+SSAO algo: http://devlog-martinsh.blogspot.tw/2011/12/ssao-shader-update-v12.html?showComment=1398158188712#c1563204765906693531
+log depth http://outerra.blogspot.tw/2013/07/logarithmic-depth-buffer-optimizations.html
+convert the exponential depth to a linear value: http://www.ozone3d.net/blogs/lab/20090206/how-to-linearize-the-depth-value/
+Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere-->
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<style>
+			body {
+				background-color: #000000;
+				margin: 0;
+				overflow: hidden;
+			}
+                        
+            #progress {
+                color: red;
+                top: 7em;
+                width: 100%;
+                font-size: 3em;
+                font-variant: small-caps;
+                font-weight: bold;
+                position: absolute;
+                z-index: 100;
+                text-align: center;
+                text-shadow: #000 0px 0px 10px;
+                display: none;
+            }
+            
+            #start {
+                color: #fff;
+                text-shadow: #000 0px 0px 2px;
+                padding: 0.1em 0.3em;
+                width: 3em;
+                text-align: center;
+                display: none;
+            }
+            
+            #progressBar {
+                text-align: center;
+                background: white;
+                width: 250px;
+                height: 10px;
+            }
+            
+            #bar {
+                background: #d00;
+                width: 50px;
+                height: 10px;
+            }                                  
+		</style>
+	</head>
+	<body>
+		<script src="lib/three.min.js"></script>
+		<script src="lib/stats.min.js"></script>
+        <script src="lib/dat.gui.min.js"></script>	
+        <script src="lib/threejs/ssao.min.js"></script>
+        <div id="progress">
+            <span id="message">Loading ...</span>
+            <center>
+                <div id="progressBar"><div id="bar"></div></div>
+                <div id="start" class="disabled">Start</div>
+            </center>
+        </div>		
+		<script>
+
+			// workaround for chrome bug: http://code.google.com/p/chromium/issues/detail?id=35980#c12
+            if ( window.innerWidth === 0 ) { window.innerWidth = parent.innerWidth; window.innerHeight = parent.innerHeight; }
+                            
+            var camera, scene, renderer, depthMaterial;
+            var depthScale = 0.5;
+            var container, stats;
+            var ssaoConfig;
+            var loader;
+            var bAddStats = false;
+            var cameraControl;
+            var clock = new THREE.Clock();
+            var postprocessing = { enabled : true };
+
+            init();
+            animate();
+
+            function init() {
+
+                container = document.createElement( 'div' );
+                document.body.appendChild( container );
+                                
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                document.body.appendChild( renderer.domElement );
+                var depthShader = THREE.ShaderLib[ "depthRGBA" ];
+                var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
+                depthMaterial = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader,
+                    uniforms: depthUniforms, blending: THREE.NoBlending } );
+                
+                camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
+                camera.position.z = 500;
+                camera.position.y = 200;
+
+                // init stats       
+                container.appendChild( renderer.domElement );
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.top = '0px';
+                container.appendChild( stats.domElement );
+                bAddStats = true;
+
+                scene = new THREE.Scene();
+                var ambient = new THREE.AmbientLight( 0x999999 );
+                scene.add( ambient );
+
+                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+                directionalLight.position.set( 0, 0, 1 ).normalize();
+                scene.add( directionalLight );                              
+                                        
+                cameraControl = new THREE.FirstPersonControls( camera, renderer.domElement );      
+                cameraControl.movementSpeed = 200;
+                cameraControl.lookSpeed = 0.05;
+
+                loadScene(); // load sponza scene
+                setupPostProcessing();      
+
+                ssaoConfig = new SSAOConfig( renderer, postprocessing );
+                initGUI( ssaoConfig );     
+
+                window.addEventListener( 'resize', onWindowResize, false );
+            }
+                        
+            function onWindowResize() {
+
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            function setupPostProcessing() {
+
+                // postprocessing
+                postprocessing.scene = new THREE.Scene();
+
+                postprocessing.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2,  window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );
+                postprocessing.camera.position.z = 1;  
+
+                postprocessing.scene.add( postprocessing.camera );
+
+                var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
+                postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget( window.innerWidth * depthScale, window.innerHeight  * depthScale, pars );
+                postprocessing.rtTextureColor = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, pars );
+                
+                var ssao_shader = THREE.SSAOShader;
+                postprocessing.ssao_uniforms = THREE.UniformsUtils.clone( ssao_shader.uniforms );
+                postprocessing.ssao_uniforms[ "tDiffuse" ].value = postprocessing.rtTextureColor; 
+                postprocessing.ssao_uniforms[ "tDepth" ].value = postprocessing.rtTextureDepth; 
+                postprocessing.ssao_uniforms[ 'size' ].value.set( window.innerWidth*depthScale, window.innerHeight*depthScale );
+                postprocessing.ssao_uniforms[ 'cameraNear' ].value = camera.near;
+                postprocessing.ssao_uniforms[ 'cameraFar' ].value = camera.far;
+                postprocessing.ssao_uniforms[ 'onlyAO' ].value = false;
+                
+                postprocessing.materialSSAO = new THREE.ShaderMaterial( {
+                    
+                    uniforms: postprocessing.ssao_uniforms,
+                    vertexShader: ssao_shader.vertexShader,
+                    fragmentShader: ssao_shader.fragmentShader
+                });                      
+                                
+                postprocessing.quad = new THREE.Mesh( new THREE.PlaneBufferGeometry( window.innerWidth, window.innerHeight ), postprocessing.materialSSAO );
+                postprocessing.quad.position.z = -500;
+                postprocessing.scene.add( postprocessing.quad );
+
+            }
+                       
+            function loadSceneObj() {
+                            
+                var loader = new THREE.OBJMTLLoader();                               
+                loader.load( 'assets/sponza/sponza.obj', 'assets/sponza/sponza.mtl', callbackFinishedObj );
+                              
+            }
+                       
+            function loadScene() {
+                           
+                loader = new THREE.BinaryLoader( true );                      
+                loader.statusDomElement.style.fontSize = "2em";
+                loader.statusDomElement.style.top = "50%";
+                loader.statusDomElement.style.right = "40%";
+                loader.statusDomElement.style.padding = "";
+                loader.statusDomElement.style.textAlign = "center";
+                loader.statusDomElement.style.width = "250px";
+
+                document.body.appendChild( loader.statusDomElement );
+                loader.showProgress =true;              
+                loader.load( 'assets/sponzaout/sponza.js', callbackFinished, 'assets/sponzaout/textures/' );
+
+            }
+                        
+            function callbackProgress( progress, result ) {
+                var bar = 250,
+                total = progress.totalModels + progress.totalTextures,
+                loaded = progress.loadModels + progress.loadTextures;
+
+                if ( total )
+                    bar = Math.floor( bar * loaded / total );
+
+                $( "bar" ).style.width = bar + "px";
+
+            }
+
+            function callbackFinished( geometry, materials ) {
+
+                var faceMaterial = new THREE.MeshFaceMaterial();
+                var lens = materials.length;
+
+                for ( var index = 0; index < lens; ++index ) {
+
+                    faceMaterial.materials[ index ] = materials[index];
+                }
+
+                var mesh = new THREE.Mesh( geometry, faceMaterial );                            
+                scene.add( mesh );
+                loader.statusDomElement.style.display = "none";
+            }
+
+            function callbackFinishedObj( object ) {
+
+                scene.add( object );
+            }
+
+            function animate() {
+
+                requestAnimationFrame( animate );
+
+                var delta = clock.getDelta(),
+                time = clock.getElapsedTime() * 10;
+
+                cameraControl.update( delta );
+
+                if ( ssaoConfig.isEnableSSAO() ) {
+
+                    scene.overrideMaterial = null;
+
+                    renderer.render( scene, camera, postprocessing.rtTextureColor , true );
+                    
+                    // Render depth into texture                    
+                    scene.overrideMaterial = depthMaterial;
+                    renderer.render( scene, camera, postprocessing.rtTextureDepth, true );
+                    
+                    // Render SSAO composite
+                    renderer.render( postprocessing.scene, postprocessing.camera );
+
+                } else {
+                    scene.overrideMaterial = null;
+                    renderer.render( scene, camera );
+                }                               
+
+                if ( ssaoConfig.isEnableProfiler() ) {
+
+                    if ( !bAddStats ) {
+                        container.appendChild( stats.domElement );
+                        bAddStats = true;
+                    }
+
+                    stats.update();
+                } else {
+
+                    if ( bAddStats ) {
+                        container.removeChild( stats.domElement );
+                        bAddStats = false;
+                    }
+                }                               
+                
+            }
+
+		</script>
+	</body>
+</html>

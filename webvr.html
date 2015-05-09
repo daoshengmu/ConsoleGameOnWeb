@@ -76,7 +76,8 @@ date: 04/23/2015
 				scene.add(mesh);
 
 				renderer = new THREE.WebGLRenderer();
-				renderer.setPixelRatio(window.devicePixelRatio);
+				// In order to support v.69, I comment this line. When we are ready to v.71, we can enable it. 
+				//renderer.setPixelRatio(window.devicePixelRatio);
 
 				renderer.setSize(window.innerWidth, window.innerHeight);
 
