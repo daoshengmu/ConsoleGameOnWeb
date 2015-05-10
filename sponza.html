@@ -58,6 +58,8 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 		<script src="lib/stats.min.js"></script>
         <script src="lib/dat.gui.min.js"></script>	
         <script src="lib/threejs/ssao.min.js"></script>
+        <script src="lib/sweetalert.min.js"></script> 
+        <script src="js/gamepad.js"></script>
         <div id="progress">
             <span id="message">Loading ...</span>
             <center>
@@ -80,6 +82,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
             var clock = new THREE.Clock();
             var postprocessing = { enabled : true };
             var bFullScreen = false, fKeyCode = 70;
+            var gamepad = null;
 
             init();
             animate();
@@ -115,23 +118,70 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 var directionalLight = new THREE.DirectionalLight( 0xffeedd );
                 directionalLight.position.set( 0, 0, 1 ).normalize();
-                scene.add( directionalLight );                              
+                scene.add( directionalLight );            
                                         
                 setupCameraControl();
+
+                //Setup gamepad
+                gamepad = new Gamepad();
+                gamepad.onConnected = onGamepadConnected;
 
                 loadScene(); // load sponza scene
                 setupPostProcessing();      
 
                 ssaoConfig = new SSAOConfig( renderer, postprocessing );
-                initGUI( ssaoConfig );     
+                initGUI( ssaoConfig );
+               // ssaoConfig.enableSSAO( false );
 
                 window.addEventListener( 'resize', onWindowResize, false );
                 // Note that the API is still vendor-prefixed in browsers implementing it
 
-                document.addEventListener("keydown", onkeyDown, false);
-                document.addEventListener("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", function( event ) {
+                document.addEventListener( 'keydown', onKeyDown, false);
+                document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
                     onFullscreenChanged( event );
                 });
+
+                 var element = document.body;
+                element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+                
+                element.requestPointerLock();
+            }
+
+            function onGamepadConnected( e ) {
+
+                swal({ title: "Gamepad connected!",   text: "I will close in 3 seconds.",  
+                    type: "success", timer: 3000,   showConfirmButton: false });
+
+                console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+                e.gamepad.index, e.gamepad.id,
+                e.gamepad.buttons.length, e.gamepad.axes.length);
+
+                if ( e.gamepad.index == 0 )
+                    mainGamePadIndex = e.gamepad.index;
+
+                if ( e.gamepad.index > 0 )
+                    alert("We just support one gamepad currently.");
+
+                var txt = 'Gamepad connected at index ' + e.gamepad.index 
+                + ': ' + e.gamepad.id + '. --- ' + e.gamepad.buttons.length +
+                ' buttons, ' + e.gamepad.axes.length +' axes.';
+
+                console.log( txt );
+
+                var gamepadType = gamepad.getGamepadType();
+
+                if ( gamepadType == 'Xbox 360' ) {
+
+                    var gamepadAxis = gamepad.params['axis'];
+                    gamepadAxis['leftStickRight'] = cameraTurnRight;
+                    gamepadAxis['leftStickLeft'] = cameraTurnLeft;
+                    gamepadAxis['leftStickDown'] = cameraMoveBackward;
+                    gamepadAxis['leftStickUp'] = cameraMoveForward;
+
+                } else {
+                    alert( 'We just support Xbox360 controller currently.' );
+                }
+                
             }
 
             function onFullscreenChanged( event ) {
@@ -139,9 +189,10 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 if ( document.fullscreenEnabled ) {
                     document.fullscreenElement;
                 }
+                
             }
 
-            function onkeyDown(event) {
+            function onKeyDown(event) {
                 var key = event.keyCode || event.which;
 
                 if (key == fKeyCode) {
@@ -174,17 +225,62 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                         }
                 }
             }
-                        
+
+            function onButtonPressed(btn, index) {
+                if (typeof(btn) == "object") {
+
+                    if (btn.pressed || btn.value) {
+
+                        console.log("You press buttion " + index);
+                    }
+                    
+                }
+            }
+
             function onWindowResize() {
-                
-                windowHalfX = window.innerWidth / 2;
-                windowHalfY = window.innerHeight / 2;
+
+                var windowHalfX = window.innerWidth / 2;
+                var windowHalfY = window.innerHeight / 2;
 
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 setupCameraControl();
 
                 renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            var mouseMove = function() {
+                this.pageX = null;
+                this.pageY = null;
+            };
+
+            function cameraTurnRight() {
+                var windowHalfX = window.innerWidth / 2;
+                var windowHalfY = window.innerHeight / 2;
+                var e = new mouseMove();
+
+                e.pageX = windowHalfX + 400;
+                e.pageY = windowHalfY;
+                cameraControl.onMouseMove( e );
+            }
+
+            function cameraTurnLeft() {
+                var windowHalfX = window.innerWidth / 2;
+                var windowHalfY = window.innerHeight / 2;
+                var e = new mouseMove();
+
+                e.pageX = windowHalfX - 400;
+                e.pageY = windowHalfY;
+
+                cameraControl.onMouseMove( e );
+            }
+
+            function cameraMoveForward() {
+                 cameraControl.moveForward = true;
+            }
+
+            function cameraMoveBackward() {
+                 cameraControl.moveBackward = true;
             }
 
             function setupCameraControl() {
@@ -291,7 +387,13 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 var delta = clock.getDelta(),
                 time = clock.getElapsedTime() * 10;
 
+                cameraControl.mouseY = 0;
                 cameraControl.update( delta );
+                cameraControl.moveForward = false;
+                cameraControl.moveBackward = false;
+                cameraControl.mouseX = 0;
+
+                gamepad.update();
 
                 if ( ssaoConfig.isEnableSSAO() ) {
 
