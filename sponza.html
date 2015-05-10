@@ -79,6 +79,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
             var cameraControl;
             var clock = new THREE.Clock();
             var postprocessing = { enabled : true };
+            var bFullScreen = false, fKeyCode = 70;
 
             init();
             animate();
@@ -116,9 +117,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 directionalLight.position.set( 0, 0, 1 ).normalize();
                 scene.add( directionalLight );                              
                                         
-                cameraControl = new THREE.FirstPersonControls( camera, renderer.domElement );      
-                cameraControl.movementSpeed = 200;
-                cameraControl.lookSpeed = 0.05;
+                setupCameraControl();
 
                 loadScene(); // load sponza scene
                 setupPostProcessing();      
@@ -127,17 +126,71 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 initGUI( ssaoConfig );     
 
                 window.addEventListener( 'resize', onWindowResize, false );
+                // Note that the API is still vendor-prefixed in browsers implementing it
+
+                document.addEventListener("keydown", onkeyDown, false);
+                document.addEventListener("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", function( event ) {
+                    onFullscreenChanged( event );
+                });
+            }
+
+            function onFullscreenChanged( event ) {
+
+                if ( document.fullscreenEnabled ) {
+                    document.fullscreenElement;
+                }
+            }
+
+            function onkeyDown(event) {
+                var key = event.keyCode || event.which;
+
+                if (key == fKeyCode) {
+                    // toggle fullscreen
+
+                    if (!document.fullscreenElement &&    // alternative standard method
+                          !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
+                        if (document.documentElement.requestFullscreen) {
+                          document.documentElement.requestFullscreen();
+                        } else if (document.documentElement.msRequestFullscreen) {
+                          document.documentElement.msRequestFullscreen();
+                        } else if (document.documentElement.mozRequestFullScreen) {
+                          document.documentElement.mozRequestFullScreen();
+                        } else if (document.documentElement.webkitRequestFullscreen) {
+                          document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                        }
+                        } 
+                        else {
+                            if (document.exitFullscreen) {
+                              document.exitFullscreen();
+                            } else if (document.msExitFullscreen) {
+                              document.msExitFullscreen();
+                            } else if (document.mozCancelFullScreen) {
+                              document.mozCancelFullScreen();
+                            } else if (document.webkitExitFullscreen) {
+                              document.webkitExitFullscreen();
+                            }
+
+                            onWindowResize();
+                        }
+                }
             }
                         
             function onWindowResize() {
-
+                
                 windowHalfX = window.innerWidth / 2;
                 windowHalfY = window.innerHeight / 2;
 
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
+                setupCameraControl();
 
                 renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            function setupCameraControl() {
+                cameraControl = new THREE.FirstPersonControls( camera, renderer.domElement );
+                cameraControl.movementSpeed = 200;
+                cameraControl.lookSpeed = 0.05;
             }
 
             function setupPostProcessing() {
