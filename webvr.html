@@ -181,19 +181,25 @@ date: 04/23/2015
 
 					camera.fov -= event.wheelDeltaY * 0.05;
 					vrEffect.zoom( -event.wheelDeltaY * 0.05 );
-					vrDeviceEffect.zoom( -event.wheelDeltaY * 0.05 );
+
+					if ( vrHMD )
+						vrDeviceEffect.zoom( -event.wheelDeltaY * 0.05 );
 				// Opera / Explorer 9
 				} else if ( event.wheelDelta ) {
 
 					camera.fov -= event.wheelDelta * 0.05;
 					vrEffect.zoom( -event.wheelDelta * 0.05 );
-					vrDeviceEffect.zoom( -event.wheelDelta * 0.05 );
+
+					if ( vrHMD )
+						vrDeviceEffect.zoom( -event.wheelDelta * 0.05 );
 				// Firefox
 				} else if ( event.detail ) {
 
 					camera.fov += event.detail * 1.0;
 					vrEffect.zoom( event.detail * 1.0 );
-					vrDeviceEffect.zoom( event.detail * 1.0 );
+
+					if ( vrHMD )
+						vrDeviceEffect.zoom( event.detail * 1.0 );
 				}
 
 				camera.updateProjectionMatrix();
@@ -233,8 +239,8 @@ date: 04/23/2015
 				}
 
 				//vrEffect.render( scene, camera );
-				//renderer.render( scene, camera );
-				vrDeviceEffect.render( scene, camera );
+				renderer.render( scene, camera );
+				//vrDeviceEffect.render( scene, camera );
 			}
 
 		</script>	
