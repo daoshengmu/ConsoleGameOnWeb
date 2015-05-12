@@ -60,6 +60,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
         <script src="lib/threejs/ssao.min.js"></script>
         <script src="lib/sweetalert.min.js"></script> 
         <script src="js/gamepad.js"></script>
+        <script src="js/threejs/OculusRiftEffect.js"></script>
         <div id="progress">
             <span id="message">Loading ...</span>
             <center>
@@ -83,6 +84,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
             var postprocessing = { enabled : true };
             var bFullScreen = false, fKeyCode = 70;
             var gamepad = null;
+            var vrEffect;
 
             init();
             animate();
@@ -132,7 +134,12 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 ssaoConfig = new SSAOConfig( renderer, postprocessing );
                 initGUI( ssaoConfig );
-               // ssaoConfig.enableSSAO( false );
+                ssaoConfig.enableSSAO( false );
+
+                // Here is the effect for the Oculus Rift
+                // worldScale 100 means that 100 Units == 1m
+                vrEffect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+                vrEffect.setSize( window.innerWidth, window.innerHeight );
 
                 window.addEventListener( 'resize', onWindowResize, false );
                 // Note that the API is still vendor-prefixed in browsers implementing it
@@ -197,8 +204,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 if ( document.fullscreenEnabled ) {
                     document.fullscreenElement;
-                }
-                
+                }                
             }
 
             function triggerFullscreen() {
@@ -250,6 +256,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 setupCameraControl();
 
                 renderer.setSize( window.innerWidth, window.innerHeight );
+                vrEffect.setSize( window.innerWidth, window.innerHeight );
             }
 
             var mouseMove = function() {
@@ -434,7 +441,8 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 } else {
                     scene.overrideMaterial = null;
-                    renderer.render( scene, camera );
+                    //renderer.render( scene, camera );
+                    vrEffect.render( scene, camera );
                 }                               
 
                 if ( ssaoConfig.isEnableProfiler() ) {
