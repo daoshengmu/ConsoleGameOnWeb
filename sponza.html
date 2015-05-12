@@ -125,6 +125,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 //Setup gamepad
                 gamepad = new Gamepad();
                 gamepad.onConnected = onGamepadConnected;
+                gamepad.onDisconnected = onGamepadDisconnected;
 
                 loadScene(); // load sponza scene
                 setupPostProcessing();      
@@ -175,13 +176,21 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                     var gamepadAxis = gamepad.params['axis'];
                     gamepadAxis['leftStickRight'] = cameraTurnRight;
                     gamepadAxis['leftStickLeft'] = cameraTurnLeft;
-                    gamepadAxis['leftStickDown'] = cameraMoveBackward;
-                    gamepadAxis['leftStickUp'] = cameraMoveForward;
-
+                    gamepadAxis['leftStickUp'] = cameraTurnUp;
+                    gamepadAxis['leftStickDown'] = cameraTurnDown;
+                    gamepadAxis['rightTriggerPress'] = cameraMoveBackward;
+                    gamepadAxis['leftTriggerPress'] = cameraMoveForward;
                 } else {
                     alert( 'We just support Xbox360 controller currently.' );
                 }
                 
+            }
+
+            function onGamepadDisconnected( e ) {
+                swal({ title: "Game pad disconnected!",   text: "I will close in 3 seconds.",  
+                    type: "warning", timer: 3000, showConfirmButton: false });
+
+                console.log("Gamepad disconnected from index %d: %s", e.gamepad.index, e.gamepad.id);
             }
 
             function onFullscreenChanged( event ) {
@@ -192,48 +201,42 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 
             }
 
+            function triggerFullscreen() {
+                 // toggle fullscreen
+                if ( !document.fullscreenElement
+                    && !document.mozFullScreenElement 
+                    && !document.webkitFullscreenElement 
+                    && !document.msFullscreenElement ) {  // current working methods
+
+                    if ( document.documentElement.requestFullscreen ) {
+                        document.documentElement.requestFullscreen();
+                    } else if ( document.documentElement.msRequestFullscreen ) {
+                        document.documentElement.msRequestFullscreen();
+                    } else if ( document.documentElement.mozRequestFullScreen ) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if ( document.documentElement.webkitRequestFullscreen ) {
+                        document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                      document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                      document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                      document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                      document.webkitExitFullscreen();
+                    }
+
+                    onWindowResize();
+                }
+            }
+
             function onKeyDown(event) {
                 var key = event.keyCode || event.which;
 
                 if (key == fKeyCode) {
-                    // toggle fullscreen
-
-                    if (!document.fullscreenElement &&    // alternative standard method
-                          !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
-                        if (document.documentElement.requestFullscreen) {
-                          document.documentElement.requestFullscreen();
-                        } else if (document.documentElement.msRequestFullscreen) {
-                          document.documentElement.msRequestFullscreen();
-                        } else if (document.documentElement.mozRequestFullScreen) {
-                          document.documentElement.mozRequestFullScreen();
-                        } else if (document.documentElement.webkitRequestFullscreen) {
-                          document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                        }
-                        } 
-                        else {
-                            if (document.exitFullscreen) {
-                              document.exitFullscreen();
-                            } else if (document.msExitFullscreen) {
-                              document.msExitFullscreen();
-                            } else if (document.mozCancelFullScreen) {
-                              document.mozCancelFullScreen();
-                            } else if (document.webkitExitFullscreen) {
-                              document.webkitExitFullscreen();
-                            }
-
-                            onWindowResize();
-                        }
-                }
-            }
-
-            function onButtonPressed(btn, index) {
-                if (typeof(btn) == "object") {
-
-                    if (btn.pressed || btn.value) {
-
-                        console.log("You press buttion " + index);
-                    }
-                    
+                   triggerFullscreen();
                 }
             }
 
@@ -271,6 +274,27 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 e.pageX = windowHalfX - 400;
                 e.pageY = windowHalfY;
+
+                cameraControl.onMouseMove( e );
+            }
+
+            function cameraTurnUp() {
+                var windowHalfX = window.innerWidth / 2;
+                var windowHalfY = window.innerHeight / 2;
+                var e = new mouseMove();
+
+                e.pageX = windowHalfX;
+                e.pageY = windowHalfY - 400;
+                cameraControl.onMouseMove( e );
+            }
+
+            function cameraTurnDown() {
+                var windowHalfX = window.innerWidth / 2;
+                var windowHalfY = window.innerHeight / 2;
+                var e = new mouseMove();
+
+                e.pageX = windowHalfX;
+                e.pageY = windowHalfY + 400;
 
                 cameraControl.onMouseMove( e );
             }
@@ -387,11 +411,11 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 var delta = clock.getDelta(),
                 time = clock.getElapsedTime() * 10;
 
-                cameraControl.mouseY = 0;
                 cameraControl.update( delta );
                 cameraControl.moveForward = false;
                 cameraControl.moveBackward = false;
                 cameraControl.mouseX = 0;
+                cameraControl.mouseY = 0;
 
                 gamepad.update();
 

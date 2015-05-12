@@ -48,7 +48,6 @@
 
 	this.onConnected = null;
 	this.onDisconnected = null;
-	this.keyFunc = null;
 
 	window.addEventListener( "gamepadconnected",
 		function( e ) {
@@ -61,18 +60,6 @@
 				onDisconnected( e );
 		}
 	);
-
-	window.addEventListener("keydown", onKeydown, false);
-
-	function onKeydown( e ) {
-
-		var key = e.keyCode || e.which;
-
-		console.log("key press:" + key);
-
-		if ( self.keyFunc )
-			self.keyFunc();
-	}
 
 	function onConnectedEvent( e ) {
 
@@ -92,6 +79,8 @@
 
 	function onDisconnected( e ) {
 
+		if ( self.onDisconnected )
+			self.onDisconnected( e );
 	}
 
 	this.getGamepadType = function() {
@@ -113,22 +102,20 @@
 			var gp = gamepads[0];
 
 			for ( var i = 0; i < gp.buttons.length; ++i ) {
-
-                //onButtonPressed(gp.buttons[i], i);
-				if ( typeof(btn) == "object ") {
-
-					if ( btn.pressed || btn.value ) {
-                        
-						var btnId;
-						for ( var btnId in gamepadBtn ) {
-							if ( gamepadBtn[btnId] == idx )
-								break;
-						}
-
-						btnFunc[btnId]();
-					}
+				
+				var btn = gp.buttons[i];
+				if ( btn.pressed || btn.value ) {
                     
-                }
+                    console.log("You press buttion " + i);
+					var btnId;
+					for ( btnId in gamepadBtn ) {
+						if ( gamepadBtn[btnId] == i )
+							break;
+					}
+
+					if ( btnFunc[btnId] )
+						btnFunc[btnId]();
+				}
             }
 
 			for ( var i = 0; i < gp.axes.length; ++i ) {
@@ -148,7 +135,7 @@
 				}
 
 				var axisId;
-				for ( var axisId in gamepadAxis ) {
+				for ( axisId in gamepadAxis ) {
 					if ( gamepadAxis[axisId] == idx )
 						break;
 				}
