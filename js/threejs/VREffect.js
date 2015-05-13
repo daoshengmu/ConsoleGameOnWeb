@@ -157,7 +157,7 @@ THREE.VREffect = function ( renderer, done ) {
 			width: renderer.domElement.width,
 			height: renderer.domElement.height
 		};
-		// Hardcoded Rift display size
+		// Hardcoded Rift display size. Confirm it in Gecko, is it hardware-accelerated?
 		renderer.setSize( 1280, 800, false );
 		this.startFullscreen();
 	};
