@@ -60,6 +60,8 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
         <script src="lib/threejs/ssao.min.js"></script>
         <script src="lib/sweetalert.min.js"></script> 
         <script src="js/gamepad.js"></script>
+        <script src="js/gui.js"></script>
+        <script src="js/demoConfig.js"></script>
         <script src="js/threejs/OculusRiftEffect.js"></script>
         <script src="js/threejs/VREffect.js"></script>
         <div id="progress">
@@ -77,7 +79,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
             var camera, scene, renderer, depthMaterial;
             var depthScale = 0.5;
             var container, stats;
-            var ssaoConfig;
+            var sponzaConfig;
             var loader;
             var bAddStats = false;
             var cameraControl;
@@ -134,9 +136,8 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 loadScene(); // load sponza scene
                 setupPostProcessing();      
 
-                ssaoConfig = new SSAOConfig( renderer, postprocessing );
-                initGUI( ssaoConfig );
-                ssaoConfig.enableSSAO( false );
+                sponzaConfig = new SponzaConfig( renderer, postprocessing );
+                initSponzaGUI( sponzaConfig );                
 
                 // Here is the effect for the Oculus Rift
                 // worldScale 100 means that 100 Units == 1m
@@ -490,7 +491,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                     }
                 }
 
-                if ( ssaoConfig.isEnableSSAO() ) {
+                if ( sponzaConfig.isEnableSSAO() ) {
 
                     scene.overrideMaterial = null;
 
@@ -505,12 +506,29 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 } else {
                     scene.overrideMaterial = null;
+
+                    var renderMode = sponzaConfig.getRenderMode();
+
+                    if ( renderMode == SponzaConfig.GENERAL_MODE ) {
+
+                        renderer.render( scene, camera );
+                    } else if ( renderMode == SponzaConfig.VREFFECT_MODE ) {
+
+                        vrEffect.render( scene, camera );
+                    } else if ( renderMode == SponzaConfig.VRDEVICE_MODE ) { 
+
+                        vrDeviceEffect.render( scene, camera );
+                    } else {
+
+                        console.error( "Not define this render mode: " + renderMode );
+                    }
+ 
                     //renderer.render( scene, camera );
                     //vrEffect.render( scene, camera );
-                    vrDeviceEffect.render( scene, camera );
+                    //vrDeviceEffect.render( scene, camera );
                 }                               
 
-                if ( ssaoConfig.isEnableProfiler() ) {
+                if ( sponzaConfig.isEnableProfiler() ) {
 
                     if ( !bAddStats ) {
                         container.appendChild( stats.domElement );
