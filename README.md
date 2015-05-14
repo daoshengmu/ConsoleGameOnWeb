@@ -24,7 +24,11 @@ WebVR lands in Firefox Nightly, http://mozvr.com/posts/webvr-lands-in-nightly/
 
 ## Downloads
 ### Nightly Firefox
+https://nightly.mozilla.org
+
 ### WebVR Add-on
+http://mozvr.com/downloads/
+
 ### Disable E10s
 Firefox Nightly includes core WebVR functionality, but it is disabled by default. The WebVR Add-On enables WebVR and disables multiprocess browsing (E10S), a new feature which is currently incompatible with WebVR. Once you have installed Firefox Nightly, open it, install the Add-On, and then follow the prompt to restart the browser. Once you've configured your displays (see below) you will be ready to start experiencing the VR web!
 
