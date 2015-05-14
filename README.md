@@ -18,8 +18,9 @@ https://github.com/d235j/360Controller/releases
 http://html5gamepad.com
 
 # VR on Web browser
-http://mozvr.com/posts/webvr-lands-in-nightly/
-http://mozvr.com/
+MozVR, http://mozvr.com/
+
+WebVR lands in Firefox Nightly, http://mozvr.com/posts/webvr-lands-in-nightly/
 
 ## Downloads
 ### Nightly Firefox
