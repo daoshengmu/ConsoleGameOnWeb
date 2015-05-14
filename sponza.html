@@ -92,7 +92,6 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
             var lastRenderMode = SponzaConfig.GENERAL_MODE;
 
             init();
-            animate();
 
             function init() {
 
@@ -153,10 +152,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                     onFullscreenChanged( event );
                 });
 
-                 var element = document.body;
-                element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
-                
-                element.requestPointerLock();
+                 animate();
             }
 
             window.addEventListener("load", function() {
@@ -400,14 +396,12 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 postprocessing.quad = new THREE.Mesh( new THREE.PlaneBufferGeometry( window.innerWidth, window.innerHeight ), postprocessing.materialSSAO );
                 postprocessing.quad.position.z = -500;
                 postprocessing.scene.add( postprocessing.quad );
-
             }
                        
             function loadSceneObj() {
                             
                 var loader = new THREE.OBJMTLLoader();                               
                 loader.load( 'assets/sponza/sponza.obj', 'assets/sponza/sponza.mtl', callbackFinishedObj );
-                              
             }
                        
             function loadScene() {
@@ -466,12 +460,15 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 time = clock.getElapsedTime() * 10;
 
                 cameraControl.update( delta );
-                cameraControl.moveForward = false;
-                cameraControl.moveBackward = false;
-                cameraControl.mouseX = 0;
-                cameraControl.mouseY = 0;
 
-                gamepad.update();
+                if ( gamepad.getActivate() ) {
+                    cameraControl.moveForward = false;
+                    cameraControl.moveBackward = false;
+                    cameraControl.mouseX = 0;
+                    cameraControl.mouseY = 0;
+
+                    gamepad.update();
+                }
 
                 // For WebVR sensor
                 if ( vrPosSensor ) {
@@ -520,8 +517,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                         vrDeviceEffect.render( scene, camera );
                     } else {
                         console.error( "Not define this render mode: " + renderMode );
-                    }
- 
+                    } 
                 }                               
 
                 if ( sponzaConfig.isEnableProfiler() ) {
@@ -535,8 +531,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                         container.removeChild( stats.domElement );
                         bAddStats = false;
                     }
-                }                               
-                
+                }
             }
 
 		</script>
