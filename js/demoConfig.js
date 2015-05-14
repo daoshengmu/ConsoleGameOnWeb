@@ -12,8 +12,7 @@ function SponzaConfig( renderer, effect ) {
     
     this.enableSSAO = function( bEnable ) {
         
-        _isEnableSSAO = bEnable;
-        
+        _isEnableSSAO = bEnable;        
     };
     
     this.isEnableSSAO = function() {
@@ -77,6 +76,43 @@ function SponzaConfig( renderer, effect ) {
 SponzaConfig.GENERAL_MODE = 0;
 SponzaConfig.VREFFECT_MODE = 1;
 SponzaConfig.VRDEVICE_MODE = 2;
+
+
+function PanoramaConfig( renderer ) {
+    var _renderer = renderer;
+    var _funcList = [];
+    var _renderMode = PanoramaConfig.GENERAL_MODE;
+    
+    this.switchRenderMode = function( value ) {
+        
+        if ( value <= PanoramaConfig.VRDEVICE_MODE ) {
+            
+            _renderMode = value;
+        } else {
+            
+            console.error( "Not define switchRenderMode type: " + value );
+        }
+    };
+
+    this.getRenderMode = function() {
+
+        return _renderMode;
+    };
+    
+    this.change = function( key, value ) {
+        
+        _funcList[ key ](value);
+    };
+    
+    // register function ptr
+    _funcList["render mode"] = this.switchRenderMode;
+}
+
+PanoramaConfig.GENERAL_MODE = 0;
+PanoramaConfig.VREFFECT_MODE = 1;
+PanoramaConfig.VRDEVICE_MODE = 2;
+
+
 
 
 
