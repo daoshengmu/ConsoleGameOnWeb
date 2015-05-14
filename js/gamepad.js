@@ -2,6 +2,7 @@
  var Gamepad = function() {
 
  	var self = this;
+ 	var bActivate = false;
 	var gamepadType = "";
 	var gamepads = null;
 	var gamepadList = {
@@ -75,12 +76,21 @@
 			}
 		}
 
+		bActivate = true;
 	}
 
 	function onDisconnected( e ) {
 
-		if ( self.onDisconnected )
+		if ( self.onDisconnected ) {
 			self.onDisconnected( e );
+		}
+
+		bActivate = false;
+	}
+
+	this.getActivate = function() {
+
+		return bActivate;
 	}
 
 	this.getGamepadType = function() {

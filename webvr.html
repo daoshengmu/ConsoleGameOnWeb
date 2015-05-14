@@ -48,7 +48,6 @@ date: 04/23/2015
 			var lastRenderMode = PanoramaConfig.GENERAL_MODE;
 
 			init();
-			gameLoop();
 
 			function init() {
 
@@ -97,7 +96,7 @@ date: 04/23/2015
 				document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );	
 				document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false);	
 
-				//gameLoop();
+				gameLoop();
 			}
 
 			window.addEventListener("load", function() {
