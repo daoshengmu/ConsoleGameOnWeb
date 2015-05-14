@@ -89,6 +89,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
             var gamepad = null;
             var vrEffect;
             var vrDeviceEffect, vrPosSensor;
+            var lastRenderMode = SponzaConfig.GENERAL_MODE;
 
             init();
             animate();
@@ -111,7 +112,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 camera.position.y = 200;
 
                 // init stats       
-                container.appendChild( renderer.domElement );
+               // container.appendChild( renderer.domElement );
                 stats = new Stats();
                 stats.domElement.style.position = 'absolute';
                 stats.domElement.style.top = '0px';
@@ -138,7 +139,6 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 sponzaConfig = new SponzaConfig( renderer, postprocessing );
                 initSponzaGUI( sponzaConfig );                
-
                 // Here is the effect for the Oculus Rift
                 // worldScale 100 means that 100 Units == 1m
                 vrEffect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
@@ -478,7 +478,6 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                     var state = vrPosSensor.getState();
 
                     if ( state.hasOrientation ) {
-
                         camera.quaternion.set(
                             state.orientation.x, 
                             state.orientation.y, 
@@ -492,7 +491,6 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 }
 
                 if ( sponzaConfig.isEnableSSAO() ) {
-
                     scene.overrideMaterial = null;
 
                     renderer.render( scene, camera, postprocessing.rtTextureColor , true );
@@ -508,36 +506,31 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                     scene.overrideMaterial = null;
 
                     var renderMode = sponzaConfig.getRenderMode();
+                    
+                    if ( lastRenderMode != renderMode ) {
+                        onWindowResize();
+                        lastRenderMode = renderMode;
+                    }
 
                     if ( renderMode == SponzaConfig.GENERAL_MODE ) {
-
                         renderer.render( scene, camera );
                     } else if ( renderMode == SponzaConfig.VREFFECT_MODE ) {
-
                         vrEffect.render( scene, camera );
-                    } else if ( renderMode == SponzaConfig.VRDEVICE_MODE ) { 
-
+                    } else if ( renderMode == SponzaConfig.VRDEVICE_MODE ) {
                         vrDeviceEffect.render( scene, camera );
                     } else {
-
                         console.error( "Not define this render mode: " + renderMode );
                     }
  
-                    //renderer.render( scene, camera );
-                    //vrEffect.render( scene, camera );
-                    //vrDeviceEffect.render( scene, camera );
                 }                               
 
                 if ( sponzaConfig.isEnableProfiler() ) {
-
                     if ( !bAddStats ) {
                         container.appendChild( stats.domElement );
                         bAddStats = true;
                     }
-
                     stats.update();
                 } else {
-
                     if ( bAddStats ) {
                         container.removeChild( stats.domElement );
                         bAddStats = false;

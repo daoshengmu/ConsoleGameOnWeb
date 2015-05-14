@@ -35,21 +35,15 @@ function initSponzaGUI( config ) {
 }
 
 var Panorama_Params = {
-    "render mode" : 0,
-    "enable profiler" : true
+    "render mode" : 0
 };
 
 function initPanoramaGUI( config ) {
      
     var gui = new dat.GUI();
     
-    gui.add( Sponza_Params, "render mode", { general: 0, VREffect: 1, VRDevice: 2 } ).onChange( function(value) {
+    gui.add( Panorama_Params, "render mode", { general: 0, VREffect: 1, VRDevice: 2 } ).onChange( function(value) {
         
         config.change( "render mode", value );        
     } ).listen();
-    
-    gui.add( Sponza_Params, "enable profiler" ).onChange( function(value) {
-        
-        config.change( "enable profiler", value );
-    } );
 }
