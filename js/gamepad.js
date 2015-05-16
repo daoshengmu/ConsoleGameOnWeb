@@ -64,6 +64,8 @@
 
 	function onConnectedEvent( e ) {
 
+		bActivate = true;
+		
 		for( var type in gamepadList ) {
 
 			if ( e.gamepad.id.indexOf(type) >= 0 ) {
@@ -76,16 +78,16 @@
 			}
 		}
 
-		bActivate = true;
 	}
 
 	function onDisconnected( e ) {
+
+		bActivate = false;
 
 		if ( self.onDisconnected ) {
 			self.onDisconnected( e );
 		}
 
-		bActivate = false;
 	}
 
 	this.getActivate = function() {

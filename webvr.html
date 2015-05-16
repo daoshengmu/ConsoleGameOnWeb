@@ -89,7 +89,7 @@ date: 04/23/2015
 
 				vrDeviceEffect = new THREE.VREffect(renderer);
 
-				container.appendChild(renderer.domElement);
+				container.appendChild( renderer.domElement );
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
@@ -116,6 +116,7 @@ date: 04/23/2015
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				vrEffect.setSize( window.innerWidth, window.innerHeight );
 				vrDeviceEffect.setSize( window.innerWidth, window.innerHeight );
 			}
 
