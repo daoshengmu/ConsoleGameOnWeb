@@ -1,13 +1,13 @@
 
  var Gamepad = function() {
 
- 	var self = this;
- 	var bActivate = false;
- 	var osType = "Unknown OS";
+	var self = this;
+	var bActivate = false;
+	var OSType = "Unknown OS";
 	var gamepadType = "";
 	var gamepads = null;
-	var gamePadList = {
-		Windows : {
+	var gamepadList = {
+		"MacOS": {
 			"Xbox 360": {
 				"button" : {
 					'dPadUp' : 0,
@@ -42,9 +42,9 @@
 					'rightTriggerRelease' : 11
 				}
 			}
-		},
+		}, 
 
-		MacOS : {
+		"Windows": {
 			"Xbox 360": {
 				"button" : {
 					'dPadUp' : 0,
@@ -80,9 +80,8 @@
 				}
 			}
 		}
+	};
 
-	}
-	
 	this.params = { 
 		'button': {},
 		'axis': {}	
@@ -106,15 +105,15 @@
 	function detectOSType() {
 
 		if ( navigator.appVersion.indexOf("Win") != -1 ) {
-			osType = "Windows";
+			OSType = "Windows";
 		} else if ( navigator.appVersion.indexOf("Mac") != -1 ) {
-			osType = "MacOS";
+			OSType = "MacOS";
 		} else if ( navigator.appVersion.indexOf("X11") != -1 ) {
-			osType = "UNIX";
+			OSType = "UNIX";
 		} else if ( navigator.appVersion.indexOf("Linux") != -1 ) {
-			osType = "Linux";
+			OSType = "Linux";
 		} else {
-			alert("Unknown OS type");
+			alert("Unknown OS type.");
 		}
 	}
 
@@ -123,7 +122,9 @@
 		detectOSType();
 		bActivate = true;
 		
-		for( var type in gamepadList ) {
+		var osGamepad = gamepadList[OSType];
+
+		for( var type in osGamepad ) {
 
 			if ( e.gamepad.id.indexOf(type) >= 0 ) {
 				gamepadType = type;
@@ -134,6 +135,7 @@
 					self.onConnected( e );
 			}
 		}
+
 	}
 
 	function onDisconnected( e ) {
@@ -143,6 +145,7 @@
 		if ( self.onDisconnected ) {
 			self.onDisconnected( e );
 		}
+
 	}
 
 	this.getActivate = function() {
@@ -156,13 +159,17 @@
 	}
 
 	this.update = function() {
-
 		var btnFunc = this.params['button'];
 		var axisFunc = this.params['axis'];
-		var gamepad = gamepadList[osType][gamepadType];
-		
-		if ( !gamepad )
-			return;
+		var osGamepad = gamepadList[OSType];
+		var gamepad;
+
+		if ( osGamepad ) {
+			gamepad = osGamepad[gamepadType];		
+
+			if ( !gamepad )
+				return;	
+		}
 
 		var gamepadBtn = gamepad['button'];
 		var gamepadAxis = gamepad['axis'];
