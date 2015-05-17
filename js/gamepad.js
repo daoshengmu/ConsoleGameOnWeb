@@ -45,23 +45,25 @@
 		}, 
 
 		"Windows": {
-			"Xbox 360": {
+			"xinput": {
 				"button" : {
-					'dPadUp' : 0,
-					'dPadDown' : 1,
-					'dPadLeft' : 2,
-					'dPadRight' : 3,
-					'backRight' : 4,
-					'backLeft' : 5,
-					'leftStick' : 6,
-					'rightStick' : 7,
-					'leftBumper' : 8,
-					'rightBumper' : 9,
-					'xbox' : 10,
-					'A' : 11,
-					'B' : 12,
-					'X' : 13,
-					'Y' : 14
+					'A' : 0,
+					'B' : 1,
+					'X' : 2,
+					'Y' : 3,
+					'leftBumper' : 4,
+					'rightBumper' : 5,
+					'leftTrigger' : 6,
+					'rightTrigger' : 7,
+					'backRight' : 8,
+					'backLeft' : 9,
+					'leftStick' : 10,
+					'rightStick' : 11,
+					'dPadUp' : 12,
+					'dPadDown' : 13,
+					'dPadLeft' : 14,
+					'dPadRight' : 15,
+					'xbox' : 16
 				},
 
 				"axis" : {
@@ -69,14 +71,10 @@
 					'leftStickLeft' : 1,
 					'leftStickDown' : 2,
 					'leftStickUp' : 3,
-					'leftTriggerPress' : 4,
-					'leftTriggerRelease' : 5,
-					'rightStickRight' : 6,
-					'rightStickLeft' : 7,
-					'rightStickDown' : 8,
-					'rightStickUp' : 9,
-					'rightTriggerPress' : 10,
-					'rightTriggerRelease' : 11
+					'rightStickRight' : 4,
+					'rightStickLeft' : 5,
+					'rightStickDown' : 6,
+					'rightStickUp' : 7
 				}
 			}
 		}
@@ -135,7 +133,6 @@
 					self.onConnected( e );
 			}
 		}
-
 	}
 
 	function onDisconnected( e ) {
@@ -145,7 +142,11 @@
 		if ( self.onDisconnected ) {
 			self.onDisconnected( e );
 		}
+	}
 
+	this.getOSType = function() {
+
+		return OSType;
 	}
 
 	this.getActivate = function() {
@@ -199,10 +200,10 @@
 				var axis = gp.axes[i];
 				var idx;
 
-				if (axis == 1) {
+				if ( Math.round( axis ) == 1 ) {
 
 					idx = i * 2;
-				} else if (axis == -1) {
+				} else if ( Math.round( axis ) == -1 ) {
 
 					idx = i * 2 + 1;
 				} else {
