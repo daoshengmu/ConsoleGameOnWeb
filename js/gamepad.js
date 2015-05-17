@@ -3,45 +3,86 @@
 
  	var self = this;
  	var bActivate = false;
+ 	var osType = "Unknown OS";
 	var gamepadType = "";
 	var gamepads = null;
-	var gamepadList = {
-		"Xbox 360": {
-			"button" : {
-				'dPadUp' : 0,
-				'dPadDown' : 1,
-				'dPadLeft' : 2,
-				'dPadRight' : 3,
-				'backRight' : 4,
-				'backLeft' : 5,
-				'leftStick' : 6,
-				'rightStick' : 7,
-				'leftBumper' : 8,
-				'rightBumper' : 9,
-				'xbox' : 10,
-				'A' : 11,
-				'B' : 12,
-				'X' : 13,
-				'Y' : 14
-			},
+	var gamePadList = {
+		Windows : {
+			"Xbox 360": {
+				"button" : {
+					'dPadUp' : 0,
+					'dPadDown' : 1,
+					'dPadLeft' : 2,
+					'dPadRight' : 3,
+					'backRight' : 4,
+					'backLeft' : 5,
+					'leftStick' : 6,
+					'rightStick' : 7,
+					'leftBumper' : 8,
+					'rightBumper' : 9,
+					'xbox' : 10,
+					'A' : 11,
+					'B' : 12,
+					'X' : 13,
+					'Y' : 14
+				},
 
-			"axis" : {
-				'leftStickRight' : 0,
-				'leftStickLeft' : 1,
-				'leftStickDown' : 2,
-				'leftStickUp' : 3,
-				'leftTriggerPress' : 4,
-				'leftTriggerRelease' : 5,
-				'rightStickRight' : 6,
-				'rightStickLeft' : 7,
-				'rightStickDown' : 8,
-				'rightStickUp' : 9,
-				'rightTriggerPress' : 10,
-				'rightTriggerRelease' : 11
+				"axis" : {
+					'leftStickRight' : 0,
+					'leftStickLeft' : 1,
+					'leftStickDown' : 2,
+					'leftStickUp' : 3,
+					'leftTriggerPress' : 4,
+					'leftTriggerRelease' : 5,
+					'rightStickRight' : 6,
+					'rightStickLeft' : 7,
+					'rightStickDown' : 8,
+					'rightStickUp' : 9,
+					'rightTriggerPress' : 10,
+					'rightTriggerRelease' : 11
+				}
+			}
+		},
+
+		MacOS : {
+			"Xbox 360": {
+				"button" : {
+					'dPadUp' : 0,
+					'dPadDown' : 1,
+					'dPadLeft' : 2,
+					'dPadRight' : 3,
+					'backRight' : 4,
+					'backLeft' : 5,
+					'leftStick' : 6,
+					'rightStick' : 7,
+					'leftBumper' : 8,
+					'rightBumper' : 9,
+					'xbox' : 10,
+					'A' : 11,
+					'B' : 12,
+					'X' : 13,
+					'Y' : 14
+				},
+
+				"axis" : {
+					'leftStickRight' : 0,
+					'leftStickLeft' : 1,
+					'leftStickDown' : 2,
+					'leftStickUp' : 3,
+					'leftTriggerPress' : 4,
+					'leftTriggerRelease' : 5,
+					'rightStickRight' : 6,
+					'rightStickLeft' : 7,
+					'rightStickDown' : 8,
+					'rightStickUp' : 9,
+					'rightTriggerPress' : 10,
+					'rightTriggerRelease' : 11
+				}
 			}
 		}
-	};
 
+	}
+	
 	this.params = { 
 		'button': {},
 		'axis': {}	
@@ -62,8 +103,24 @@
 		}
 	);
 
+	function detectOSType() {
+
+		if ( navigator.appVersion.indexOf("Win") != -1 ) {
+			osType = "Windows";
+		} else if ( navigator.appVersion.indexOf("Mac") != -1 ) {
+			osType = "MacOS";
+		} else if ( navigator.appVersion.indexOf("X11") != -1 ) {
+			osType = "UNIX";
+		} else if ( navigator.appVersion.indexOf("Linux") != -1 ) {
+			osType = "Linux";
+		} else {
+			alert("Unknown OS type");
+		}
+	}
+
 	function onConnectedEvent( e ) {
 
+		detectOSType();
 		bActivate = true;
 		
 		for( var type in gamepadList ) {
@@ -77,7 +134,6 @@
 					self.onConnected( e );
 			}
 		}
-
 	}
 
 	function onDisconnected( e ) {
@@ -87,7 +143,6 @@
 		if ( self.onDisconnected ) {
 			self.onDisconnected( e );
 		}
-
 	}
 
 	this.getActivate = function() {
@@ -101,9 +156,11 @@
 	}
 
 	this.update = function() {
+
 		var btnFunc = this.params['button'];
 		var axisFunc = this.params['axis'];
-		var gamepad = gamepadList[gamepadType];
+		var gamepad = gamepadList[osType][gamepadType];
+		
 		if ( !gamepad )
 			return;
 
