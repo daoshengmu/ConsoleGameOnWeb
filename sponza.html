@@ -209,20 +209,21 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 console.log( txt );
 
                 var gamepadType = gamepad.getGamepadType();
+                var gamepadAxis = gamepad.params['axis'];
+                var gamepadBtn = gamepad.params['button'];
 
-                if ( gamepadType == 'Xbox 360' ) {
+                gamepadAxis['leftStickRight'] = cameraTurnRight;
+                gamepadAxis['leftStickLeft'] = cameraTurnLeft;
+                gamepadAxis['leftStickUp'] = cameraTurnUp;
+                gamepadAxis['leftStickDown'] = cameraTurnDown;
 
-                    var gamepadAxis = gamepad.params['axis'];
-                    gamepadAxis['leftStickRight'] = cameraTurnRight;
-                    gamepadAxis['leftStickLeft'] = cameraTurnLeft;
-                    gamepadAxis['leftStickUp'] = cameraTurnUp;
-                    gamepadAxis['leftStickDown'] = cameraTurnDown;
-                    gamepadAxis['rightTriggerPress'] = cameraMoveBackward;
+                if ( gamepad.getOSType() == "MacOS" ) {
+                    gamepadAxis['rightTriggerPress']  =cameraMoveBackward;
                     gamepadAxis['leftTriggerPress'] = cameraMoveForward;
-                } else {
-                    alert( 'We just support Xbox360 controller currently.' );
+                } else if ( gamepad.getOSType() == "Windows" ) {
+                    gamepadBtn['rightTrigger']  =cameraMoveBackward;
+                    gamepadBtn['leftTrigger'] = cameraMoveForward;
                 }
-                
             }
 
             function onGamepadDisconnected( e ) {
