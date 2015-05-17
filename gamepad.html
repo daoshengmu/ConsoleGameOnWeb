@@ -59,21 +59,21 @@ date: 04/20/2015
 			// 	'Y' : 14
 			// };
 			
-			// // Axis definitions
-			// const Axis = {
-			// 	'leftStickRight' : 0,
-			// 	'leftStickLeft' : 1,
-			// 	'leftStickDown' : 2,
-			// 	'leftStickUp' : 3,
-			// 	'leftTriggerPress' : 4,
-			// 	'leftTriggerRelease' : 5,
-			// 	'rightStickRight' : 6,
-			// 	'rightStickLeft' : 7,
-			// 	'rightStickDown' : 8,
-			// 	'rightStickUp' : 9,
-			// 	'rightTriggerPress' : 10,
-			// 	'rightTriggerRelease' : 11
-			// };
+			// Axis definitions
+			const Axis = {
+				'leftStickRight' : 0,
+				'leftStickLeft' : 1,
+				'leftStickDown' : 2,
+				'leftStickUp' : 3,
+				'leftTriggerPress' : 4,
+				'leftTriggerRelease' : 5,
+				'rightStickRight' : 6,
+				'rightStickLeft' : 7,
+				'rightStickDown' : 8,
+				'rightStickUp' : 9,
+				'rightTriggerPress' : 10,
+				'rightTriggerRelease' : 11
+			};
 
 			var gamepadItems = {
 
@@ -205,16 +205,16 @@ date: 04/20/2015
 
 			function buttonPressed(btn, index) {
 
-				if (typeof(btn) == "object") {
+				if ( typeof(btn) == "object" ) {
 
-					var gamePad = gamepadItems[OSType];
+					var gamepad = gamepadItems[OSType];
 
 					if ( !gamepad )
 						return;
 
-					var buttonPos = gamePad.buttonPos;
+					var buttonPos = gamepad.buttonPos;
 
-					if (btn.pressed || btn.value) {
+					if ( btn.pressed || btn.value ) {
 
 						console.log("You press buttion " + index);
 						var btnBallElement = $('#highlightButtonBallDiv')[0];	
@@ -229,16 +229,16 @@ date: 04/20/2015
 
 			function axisPressed(axis, posIndex, negIndex) {
 				 
-				var gamePad = gamepadItems[OSType];
+				var gamepad = gamepadItems[OSType];
 
 				if ( !gamepad )
 					return;
 
-				var axisPos = gamePad.axisPos;
+				var axisPos = gamepad.axisPos;
 
 			 	var axisBallElement = $('#highlightAxisBallDiv')[0];	
  
-			 	if (axis == 1) {
+			 	if ( axis == 1 ) {
 
 					console.log("You press axis " + posIndex);
 					var pos = axisPos[posIndex];
@@ -246,10 +246,10 @@ date: 04/20/2015
 					axisBallElement.style.top = pos.y;
 					axisBallElement.style.display = 'block';
 
-			    } else if (axis == -1) {
+			    } else if ( axis == -1 ) {
 
-			    	if(negIndex == Axis.leftTriggerRelease 
-			    		|| negIndex == Axis.rightTriggerRelease)
+			    	if( negIndex == Axis.leftTriggerRelease 
+			    		|| negIndex == Axis.rightTriggerRelease )
 			    		return;
 
 					console.log("You press axis " + negIndex);
@@ -264,7 +264,7 @@ date: 04/20/2015
 
 				var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
 				
-				if (!gamepads) {
+				if ( !gamepads ) {
 				    return;
 				}
 
@@ -278,12 +278,12 @@ date: 04/20/2015
 
 				var gp = gamepads[0];
 
-				for (var i = 0; i < gp.buttons.length; ++i) {
+				for ( var i = 0; i < gp.buttons.length; ++i ) {
 
 					buttonPressed(gp.buttons[i], i);
 				}
 
-				for (var i = 0; i < gp.axes.length; ++i) {
+				for ( var i = 0; i < gp.axes.length; ++i ) {
 
 					axisPressed(gp.axes[i], i*2, (i*2)+1);
 				}
