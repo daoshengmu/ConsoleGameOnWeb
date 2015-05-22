@@ -39,6 +39,7 @@ date: 04/23/2015
 			lat = 0, onMouseDownLat = 0,
 			phi = 0, theta = 0;
 			var lastRenderMode = PanoramaConfig.GENERAL_MODE;
+			var bFullScreen = false, fKeyCode = 70;
 
 			init();
 
@@ -82,6 +83,10 @@ date: 04/23/2015
 				container.appendChild( renderer.domElement );
 
 				window.addEventListener( 'resize', onWindowResize, false );
+				document.addEventListener( 'keydown', onKeyDown, false);
+				document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
+                    onFullscreenChanged( event );
+                });
 
 				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -100,6 +105,14 @@ date: 04/23/2015
 			    }
 			}, false);
 
+			function onKeyDown(event) {
+                var key = event.keyCode || event.which;
+
+                if (key == fKeyCode) {
+                    triggerFullscreen();
+                }
+            }
+
 			function onWindowResize() {
 
 				camera.aspect = window.innerWidth / window.innerHeight;
@@ -108,6 +121,52 @@ date: 04/23/2015
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				vrEffect.setSize( window.innerWidth, window.innerHeight );
 				vrDeviceEffect.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function onFullscreenChanged( event ) {
+
+			    if ( document.fullscreenEnabled ) {
+			        document.fullscreenElement;
+			    }                
+			}
+
+			function triggerFullscreen() {
+
+			    bFullScreen = !bFullScreen;
+
+			    if ( vrPosSensor && bFullScreen ) {
+			        vrDeviceEffect.setFullScreen( bFullScreen );
+			        return;
+			    }
+
+			     // toggle fullscreen
+			    if ( !document.fullscreenElement
+			        && !document.mozFullScreenElement 
+			        && !document.webkitFullscreenElement 
+			        && !document.msFullscreenElement ) {  // current working methods
+
+			        if ( document.documentElement.requestFullscreen ) {
+			            document.documentElement.requestFullscreen();
+			        } else if ( document.documentElement.msRequestFullscreen ) {
+			            document.documentElement.msRequestFullscreen();
+			        } else if ( document.documentElement.mozRequestFullScreen ) {
+			            document.documentElement.mozRequestFullScreen();
+			        } else if ( document.documentElement.webkitRequestFullscreen ) {
+			            document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+			        }
+			    } else {
+			        if (document.exitFullscreen) {
+			          document.exitFullscreen();
+			        } else if (document.msExitFullscreen) {
+			          document.msExitFullscreen();
+			        } else if (document.mozCancelFullScreen) {
+			          document.mozCancelFullScreen();
+			        } else if (document.webkitExitFullscreen) {
+			          document.webkitExitFullscreen();
+			        }
+
+			        onWindowResize();
+			    }
 			}
 
 			function vrDeviceCallback(devices) {
