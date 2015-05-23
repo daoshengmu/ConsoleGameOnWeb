@@ -16,9 +16,10 @@ date: 04/23/2015
 		<script src="lib/three.min.js"></script>
 		<script src="lib/dat.gui.min.js"></script>
 		<script src="js/gui.js"></script>
-        <script src="js/demoConfig.js"></script>
+		<script src="js/demoConfig.js"></script>
 		<script src="js/threejs/OculusRiftEffect.js"></script>
 		<script src="js/threejs/VREffect.js"></script>
+		<script src="js/threejs/DeviceOrientationControls.js"></script>
 		<title>Web VR Demo - Mobile</title>		
 	</head>
 	<body>
@@ -32,6 +33,7 @@ date: 04/23/2015
 			var vrEffect;
 			var vrHMD, vrPosSensor;
 			var vrDeviceEffect;
+			var control;
 
 			var isUserInteracting = false,
 			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
@@ -74,8 +76,8 @@ date: 04/23/2015
 
 				// Here is the effect for the Oculus Rift
 				// worldScale 100 means that 100 Units == 1m
-				vrEffect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
-				vrEffect.setSize( window.innerWidth, window.innerHeight );
+				// vrEffect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+				// vrEffect.setSize( window.innerWidth, window.innerHeight );
 
 				vrDeviceEffect = new THREE.VREffect(renderer);
 
@@ -95,7 +97,16 @@ date: 04/23/2015
 			        navigator.mozGetVRDevices(vrDeviceCallback);
 			    }
 
-				vrDeviceEffect.setFullScreen( true );
+			 //    if (window.DeviceMotionEvent) {
+				// 	window.addEventListener('devicemotion', deviceMotionHandler, false);
+				// }
+
+				// if (window.DeviceOrientationEvent) {
+				// 	window.addEventListener('deviceorientation', deviceOrientHandler, false);
+				// }
+
+				control = new THREE.DeviceOrientationControls( camera );
+			
 				gameLoop();
 			}
 
@@ -104,8 +115,8 @@ date: 04/23/2015
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				vrEffect.setSize( window.innerWidth, window.innerHeight );
+				//renderer.setSize( window.innerWidth, window.innerHeight );
+				//vrEffect.setSize( window.innerWidth, window.innerHeight );
 				vrDeviceEffect.setSize( window.innerWidth, window.innerHeight );
 			}
 
@@ -132,6 +143,8 @@ date: 04/23/2015
 						break;
 					}
 				}
+
+				vrDeviceEffect.setFullScreen( true );
 			}
 
 			function onDocumentMouseDown( event ) {
@@ -162,34 +175,73 @@ date: 04/23/2015
 			}
 
 			function onDocumentMouseWheel( event ) {
-				// WebKit
-				if ( event.wheelDeltaY ) {
+				// // WebKit
+				// if ( event.wheelDeltaY ) {
 
-					camera.fov -= event.wheelDeltaY * 0.05;
-					vrEffect.zoom( -event.wheelDeltaY * 0.05 );
+				// 	camera.fov -= event.wheelDeltaY * 0.05;
+				// 	vrEffect.zoom( -event.wheelDeltaY * 0.05 );
 
-					if ( vrHMD )
-						vrDeviceEffect.zoom( -event.wheelDeltaY * 0.05 );
-				// Opera / Explorer 9
-				} else if ( event.wheelDelta ) {
+				// 	if ( vrHMD )
+				// 		vrDeviceEffect.zoom( -event.wheelDeltaY * 0.05 );
+				// // Opera / Explorer 9
+				// } else if ( event.wheelDelta ) {
 
-					camera.fov -= event.wheelDelta * 0.05;
-					vrEffect.zoom( -event.wheelDelta * 0.05 );
+				// 	camera.fov -= event.wheelDelta * 0.05;
+				// 	vrEffect.zoom( -event.wheelDelta * 0.05 );
 
-					if ( vrHMD )
-						vrDeviceEffect.zoom( -event.wheelDelta * 0.05 );
-				// Firefox
-				} else if ( event.detail ) {
+				// 	if ( vrHMD )
+				// 		vrDeviceEffect.zoom( -event.wheelDelta * 0.05 );
+				// // Firefox
+				// } else if ( event.detail ) {
 
-					camera.fov += event.detail * 1.0;
-					vrEffect.zoom( event.detail * 1.0 );
+				// 	camera.fov += event.detail * 1.0;
+				// 	vrEffect.zoom( event.detail * 1.0 );
 
-					if ( vrHMD )
-						vrDeviceEffect.zoom( event.detail * 1.0 );
-				}
+				// 	if ( vrHMD )
+				// 		vrDeviceEffect.zoom( event.detail * 1.0 );
+				// }
 
-				camera.updateProjectionMatrix();
+				// camera.updateProjectionMatrix();
 			}
+
+			// function deviceOrientHandler( eventData ) {
+			// 	orientation.x = eventData.alpha;
+			// 	orientation.y = eventData.beta;
+			// 	orientation.z = eventData.gamma; 
+			// }
+
+			// function deviceMotionHandler( eventData ) {
+			// 	var info, xyz = "[X, Y, Z]";
+
+			// 	// Grab the acceleration from the results
+			// 	var acceleration = eventData.acceleration;
+			// 	info = xyz.replace("X", acceleration.x);
+			// 	info = info.replace("Y", acceleration.y);
+			// 	info = info.replace("Z", acceleration.z);
+			// 	console.log( "acceleration: " + info );
+
+			// 	// Grab the acceleration including gravity from the results
+			// 	acceleration = eventData.accelerationIncludingGravity;
+			// 	info = xyz.replace("X", acceleration.x);
+			// 	info = info.replace("Y", acceleration.y);
+			// 	info = info.replace("Z", acceleration.z);
+			// 	console.log( "accelerationIncludingGravity: " + info );
+
+			// 	// Grab the rotation rate from the results
+			// 	var rotation = eventData.rotationRate;
+			// 	info = xyz.replace("X", rotation.alpha);
+			// 	info = info.replace("Y", rotation.beta);
+			// 	info = info.replace("Z", rotation.gamma);
+			// 	console.log( "rotation: " + info );
+
+			// 	// // Grab the refresh interval from the results
+			// 	info = eventData.interval;
+			// 	console.log( "interval: " + info );   
+
+			// 	orientation.x = rotation.alpha;
+			// 	orientation.y = rotation.beta;
+			// 	orientation.z = rotation.gamma; 
+			// }
 
 			function gameLoop() {
 
@@ -212,16 +264,27 @@ date: 04/23/2015
 					lastRenderMode = renderMode;
 				}
 
-				var state = vrPosSensor.getState();
+				if ( vrPosSensor ) {
+					var state = vrPosSensor.getState();
 
-				if ( state.hasOrientation ) {
-					camera.quaternion.set(
-						state.orientation.x, 
-						state.orientation.y, 
-						state.orientation.z, 
-						state.orientation.w);
+					if ( state.hasOrientation ) {
+						// camera.quaternion.set(
+						// 	state.orientation.x, 
+						// 	state.orientation.y, 
+						// 	state.orientation.z, 
+						// 	state.orientation.w);
+
+						camera.quaternion.set(
+							orientation.x, 
+							orientation.y, 
+							orientation.z, 
+							1.0);
+
+						//console.log(state.orientation);
+					}
 				}
 
+				control.update();
 				vrDeviceEffect.render( scene, camera );
 
 				//vrEffect.render( scene, camera );
