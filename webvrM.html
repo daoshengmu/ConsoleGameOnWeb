@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<!-- 
+Web VR API experiment of Cardboard
+author: daoshengmu, http://dsmu.me
+date: 04/23/2015
+-->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<link href="css/style.css" rel="stylesheet">
+		<link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
+		<script src="lib/jquery-1.11.2.min.js"></script>
+		<script src="lib/sweetalert.min.js"></script>
+		<script src="lib/three.min.js"></script>
+		<script src="lib/dat.gui.min.js"></script>
+		<script src="js/gui.js"></script>
+		<script src="js/demoConfig.js"></script>
+		<script src="js/threejs/VREffect.js"></script>
+		<script src="js/threejs/DeviceOrientationControls.js"></script>
+		<title>Web VR Demo - Mobile</title>		
+	</head>
+	<body>
+		<div id="info">
+			The panorama image is from <a href="http://www.lemis.com/grog/photos/Photos.php?dirdate=20120601" target="_blank">Greg</a>
+		</div>
+		<div id="container"></div>
+		<script type="text/javascript">
+			var camera, scene, renderer;
+			var vrHMD, vrPosSensor;
+			var vrDeviceEffect;
+			var control;
+
+			init();
+
+			function init() {
+
+				var container, mesh;
+
+				container = document.getElementById('container');
+				camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1100);
+
+				camera.target = new THREE.Vector3(0, 0, 0);
+
+				scene = new THREE.Scene();
+
+				var geometry = new THREE.SphereGeometry(500, 60, 40);
+				geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+
+				var material = new THREE.MeshBasicMaterial( {
+					map: THREE.ImageUtils.loadTexture('images/verandah-centre-equirectangular.jpg')
+				});
+
+				mesh = new THREE.Mesh(geometry, material);
+				scene.add(mesh);
+
+				renderer = new THREE.WebGLRenderer();
+				// In order to support v.69, I comment this line. When we are ready to v.71, we can enable it. 
+				//renderer.setPixelRatio(window.devicePixelRatio);
+
+				renderer.setSize(window.innerWidth, window.innerHeight);
+
+				vrDeviceEffect = new THREE.VREffect(renderer);
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				container.appendChild( renderer.domElement );
+
+				if ( navigator.getVRDevices ) {
+			        navigator.getVRDevices().then( vrDeviceCallback );
+			    } else if ( navigator.mozGetVRDevices ) {
+			        navigator.mozGetVRDevices( vrDeviceCallback );
+			    }
+
+				control = new THREE.DeviceOrientationControls( camera );
+			
+				gameLoop();
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				vrDeviceEffect.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function vrDeviceCallback(devices) {
+
+				if (devices.length) {
+					swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
+					type: "success", timer: 3000, showConfirmButton: false });
+				} else {
+					return;
+				}
+
+				for (var i = 0; i < devices.length; ++i) {
+
+					if (devices[i] instanceof HMDVRDevice) {
+						vrHMD = devices[i];
+					}	
+
+					if (vrHMD && devices[i] instanceof PositionSensorVRDevice
+						&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+						vrPosSensor = devices[i];
+						// We just want to get the first VR device.
+						break;
+					}
+				}
+
+				vrDeviceEffect.setFullScreen( true );
+			}
+
+			function gameLoop() {
+
+				requestAnimationFrame( gameLoop );
+
+				// vrPosSensor is not supported on mobile devices.
+				// if ( vrPosSensor ) {
+				// 	var state = vrPosSensor.getState();
+
+				// 	if ( state.hasOrientation ) {
+				// 		// camera.quaternion.set(
+				// 		// 	state.orientation.x, 
+				// 		// 	state.orientation.y, 
+				// 		// 	state.orientation.z, 
+				// 		// 	state.orientation.w);
+
+				// 		camera.quaternion.set(
+				// 			orientation.x, 
+				// 			orientation.y, 
+				// 			orientation.z, 
+				// 			1.0);
+
+				// 		//console.log(state.orientation);
+				// 	}
+				// }
+
+				control.update();
+				vrDeviceEffect.render( scene, camera );
+			}
+
+		</script>	
+	</body>
+</html>
