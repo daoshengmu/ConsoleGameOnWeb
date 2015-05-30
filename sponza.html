@@ -245,7 +245,8 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 bFullScreen = !bFullScreen;
 
-                if ( vrPosSensor && bFullScreen ) {
+                if ( sponzaConfig.getRenderMode() == SponzaConfig.VRDEVICE_MODE
+                    && vrPosSensor && bFullScreen ) {
                     vrDeviceEffect.setFullScreen( bFullScreen );
                     return;
                 }

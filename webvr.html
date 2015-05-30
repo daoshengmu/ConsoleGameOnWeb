@@ -134,7 +134,8 @@ date: 04/23/2015
 
 			    bFullScreen = !bFullScreen;
 
-			    if ( vrPosSensor && bFullScreen ) {
+			    if ( panoramaConfig.getRenderMode() == PanoramaConfig.VRDEVICE_MODE
+			    	&& vrPosSensor && bFullScreen ) {
 			        vrDeviceEffect.setFullScreen( bFullScreen );
 			        return;
 			    }
