@@ -183,7 +183,7 @@
 				var btn = gp.buttons[i];
 				if ( btn.pressed || btn.value ) {
                     
-                    console.log("You press buttion " + i);
+					console.log("You press buttion " + i);
 					var btnId;
 					for ( btnId in gamepadBtn ) {
 						if ( gamepadBtn[btnId] == i )
@@ -193,7 +193,7 @@
 					if ( btnFunc[btnId] )
 						btnFunc[btnId]();
 				}
-            }
+			}
 
 			for ( var i = 0; i < gp.axes.length; ++i ) {
 
