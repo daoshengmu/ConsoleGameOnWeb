@@ -272,27 +272,28 @@ date: 04/23/2015
                     lastRenderMode = renderMode;
                 }
 
+                // For WebVR sensor
+                if ( vrPosSensor ) {
+                   var state = vrPosSensor.getState();
+
+                    if ( state.hasOrientation ) {
+                       camera.quaternion.set(
+                               state.orientation.x, 
+                               state.orientation.y, 
+                               state.orientation.z, 
+                               state.orientation.w);
+                    }
+
+                    if ( state.hasPosition ) {
+
+                    }
+                }
+
                 if ( renderMode == PanoramaConfig.GENERAL_MODE ) {
                     renderer.render( scene, camera );
                 } else if ( renderMode == PanoramaConfig.VREFFECT_MODE ) {
                     vrEffect.render( scene, camera );
                 } else if ( renderMode == PanoramaConfig.VRDEVICE_MODE ) {
-                    // For WebVR sensor
-                    if ( vrPosSensor ) {
-                	   var state = vrPosSensor.getState();
-
-                        if ( state.hasOrientation ) {
-                    	   camera.quaternion.set(
-                    		       state.orientation.x, 
-                    		       state.orientation.y, 
-                    		       state.orientation.z, 
-                    		       state.orientation.w);
-                	   }
-
-                        if ( state.hasPosition ) {
-
-                        }
-                    }
                     vrDeviceEffect.render( scene, camera );
                 } else {
                     console.error( "Not define this render mode: " + renderMode );
