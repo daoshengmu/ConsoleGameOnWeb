@@ -8,14 +8,14 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
 <html lang="en">
 	<head>
-		<meta charset="utf-8">
+        <meta charset="utf-8">
         <link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
-		<style>
-			body {
-				background-color: #000000;
-				margin: 0;
-				overflow: hidden;
-			}
+        <style>
+            body {
+                background-color: #000000;
+                margin: 0;
+                overflow: hidden;
+            }
                         
             #progress {
                 color: red;
@@ -195,9 +195,6 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
                 e.gamepad.index, e.gamepad.id,
                 e.gamepad.buttons.length, e.gamepad.axes.length);
-
-                if ( e.gamepad.index == 0 )
-                    mainGamePadIndex = e.gamepad.index;
 
                 if ( e.gamepad.index > 0 )
                     alert("We just support one gamepad currently.");

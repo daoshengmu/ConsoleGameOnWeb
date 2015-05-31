@@ -6,6 +6,7 @@
     var OSType = "Unknown OS";
     var gamepadType = "";
     var gamepads = null;
+    var gamePadIndex = -1;
     var gamepadList = {
         "MacOS": {
             "Xbox 360": {
@@ -119,7 +120,7 @@
 
         detectOSType();
         bActivate = true;
-
+        gamePadIndex = e.gamepad.index;
         var osGamepad = gamepadList[OSType];
 
         for( var type in osGamepad ) {
@@ -176,7 +177,7 @@
         var gamepadAxis = gamepad['axis'];
                 
         if ( gamepads && gamepads.length ) {
-            var gp = gamepads[0];
+            var gp = gamepads[gamePadIndex];
 
             for ( var i = 0; i < gp.buttons.length; ++i ) {
 

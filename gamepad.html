@@ -44,7 +44,7 @@ date: 04/20/2015
 			var start;
 			var mainGamePadIndex = -1;
 			var OSType;
-			
+
 			// Axis definitions
 			const Axis = {
 				'leftTriggerRelease' : 5,
@@ -142,25 +142,28 @@ date: 04/20/2015
 				+ ': ' + e.gamepad.id + '. --- ' + e.gamepad.buttons.length +
 				' buttons, ' + e.gamepad.axes.length +' axes.';
 
-			  	var div = $('#gamepadTxt')[0];
-    			div.textContent = txt;
+				var div = $('#gamepadTxt')[0];
+				div.textContent = txt;
 
-    			detectOSType();
-    			gameLoop();
+				detectOSType();
+				gameLoop();
 
 			});
 
 			window.addEventListener("gamepaddisconnected", function(e) {
 
-				swal({ title: "Gamepad disconnected!",   text: "I will close in 3 seconds.",  
-					type: "warning", timer: 3000, showConfirmButton: false });
+				swal({ title: "Gamepad disconnected!",   text: "I will close in 3 seconds.", type: "warning", timer: 3000, showConfirmButton: false });
 
-			  console.log("Gamepad disconnected from index %d: %s",
-			    e.gamepad.index, e.gamepad.id);
-			  var div = document.getElementById("textDiv");
-    			div.textContent += "Game pad disconnected";
+				console.log("Gamepad disconnected from index %d: %s"
+					, e.gamepad.index, e.gamepad.id);
 
-    			 rAFStop(start);
+				var txt = 'Gamepad disconnected at index ' + e.gamepad.index 
+				+ ': ' + e.gamepad.id;
+
+				var div = $('#gamepadTxt')[0];
+				div.textContent = txt;
+
+				rAFStop(start);
 			});
 
 			function detectOSType() {
@@ -252,7 +255,7 @@ date: 04/20/2015
 				axisBallElement.style.display = 'none';
 				// end of disable
 
-				var gp = gamepads[0];
+				var gp = gamepads[mainGamePadIndex];
 
 				for ( var i = 0; i < gp.buttons.length; ++i ) {
 
