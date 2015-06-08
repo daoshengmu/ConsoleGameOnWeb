@@ -68,10 +68,10 @@ date: 04/23/2015
 				container.appendChild( renderer.domElement );
 
 				if ( navigator.getVRDevices ) {
-			        navigator.getVRDevices().then( vrDeviceCallback );
-			    } else if ( navigator.mozGetVRDevices ) {
-			        navigator.mozGetVRDevices( vrDeviceCallback );
-			    }
+					navigator.getVRDevices().then( vrDeviceCallback );
+				} else if ( navigator.mozGetVRDevices ) {
+					navigator.mozGetVRDevices( vrDeviceCallback );
+				}
 
 				control = new THREE.DeviceOrientationControls( camera );
 			
