@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<!--Reference: 
+SSAO algo: http://devlog-martinsh.blogspot.tw/2011/12/ssao-shader-update-v12.html?showComment=1398158188712#c1563204765906693531
+log depth http://outerra.blogspot.tw/2013/07/logarithmic-depth-buffer-optimizations.html
+convert the exponential depth to a linear value: http://www.ozone3d.net/blogs/lab/20090206/how-to-linearize-the-depth-value/
+Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere
+Web VR API experiment of Cardboard
+author: daoshengmu, http://dsmu.me
+date: 06/17/2015
+-->
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
+        <style>
+            body {
+                background-color: #000000;
+                margin: 0;
+                overflow: hidden;
+            }
+                        
+            #progress {
+                color: red;
+                top: 7em;
+                width: 100%;
+                font-size: 3em;
+                font-variant: small-caps;
+                font-weight: bold;
+                position: absolute;
+                z-index: 100;
+                text-align: center;
+                text-shadow: #000 0px 0px 10px;
+                display: none;
+            }
+            
+            #start {
+                color: #fff;
+                text-shadow: #000 0px 0px 2px;
+                padding: 0.1em 0.3em;
+                width: 3em;
+                text-align: center;
+                display: none;
+            }
+            
+            #progressBar {
+                text-align: center;
+                background: white;
+                width: 250px;
+                height: 10px;
+            }
+            
+            #bar {
+                background: #d00;
+                width: 50px;
+                height: 10px;
+            }                                  
+        </style>
+        <script src="lib/three.min.js"></script>
+        <script src="lib/threejs/ssao.min.js"></script>
+        <script src="lib/sweetalert.min.js"></script> 
+        <script src="js/threejs/VREffect.js"></script>
+        <script src="js/threejs/DeviceOrientationControls.js"></script>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="progress">
+            <span id="message">Loading ...</span>
+            <center>
+                <div id="progressBar"><div id="bar"></div></div>
+                <div id="start" class="disabled">Start</div>
+            </center>
+        </div>      
+        <script>
+            // workaround for chrome bug: http://code.google.com/p/chromium/issues/detail?id=35980#c12
+            if ( window.innerWidth === 0 ) { window.innerWidth = parent.innerWidth; window.innerHeight = parent.innerHeight; }
+                            
+            var camera, scene, renderer, depthMaterial;
+            var depthScale = 0.5;
+            var container;
+            var sponzaConfig;
+            var loader;
+            var bAddStats = false;
+            var control;
+            var vrDeviceEffect, vrPosSensor;
+
+            init();
+
+            function init() {
+
+                container = document.getElementById('container');
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                container.appendChild( renderer.domElement );
+                var depthShader = THREE.ShaderLib[ "depthRGBA" ];
+                var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
+                depthMaterial = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader,
+                    uniforms: depthUniforms, blending: THREE.NoBlending } );
+                
+                camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
+                camera.position.z = 500;
+                camera.position.y = 200;
+
+                scene = new THREE.Scene();
+                var ambient = new THREE.AmbientLight( 0x999999 );
+                scene.add( ambient );
+
+                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+                directionalLight.position.set( 0, 0, 1 ).normalize();
+                scene.add( directionalLight );            
+                                    
+
+                loadScene(); // load sponza scene
+                
+                vrDeviceEffect = new THREE.VREffect(renderer);
+
+                window.addEventListener( 'resize', onWindowResize, false );
+                // Note that the API is still vendor-prefixed in browsers implementing it
+
+                control = new THREE.DeviceOrientationControls( camera );
+                animate();
+            }
+
+            window.addEventListener("load", function() {
+                if (navigator.getVRDevices) {
+                    navigator.getVRDevices().then(onVRDeviceConnected);
+                } else if (navigator.mozGetVRDevices) {
+                    navigator.mozGetVRDevices(onVRDeviceConnected);
+                }
+            }, false);
+
+            function onVRDeviceConnected(devices) {
+
+                if (devices.length) {
+                    swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
+                    type: "success", timer: 3000,   showConfirmButton: false });
+                } else {
+                    return;
+                }
+
+                for (var i = 0; i < devices.length; ++i) {
+
+                    if (devices[i] instanceof HMDVRDevice) {
+                        vrHMD = devices[i];
+                    }   
+
+                    if (vrHMD && devices[i] instanceof PositionSensorVRDevice
+                        && devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+                        vrPosSensor = devices[i];
+
+                        // We just want to get the first VR device.
+                        break;
+                    }
+                }
+
+                vrDeviceEffect.setFullScreen( true );
+            }
+
+            function onWindowResize() {
+
+                var windowHalfX = window.innerWidth / 2;
+                var windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            function loadSceneObj() {
+                            
+                var loader = new THREE.OBJMTLLoader();                               
+                loader.load( 'assets/sponza/sponza.obj', 'assets/sponza/sponza.mtl', callbackFinishedObj );
+            }
+                       
+            function loadScene() {
+                           
+                loader = new THREE.BinaryLoader( true );                      
+                loader.statusDomElement.style.fontSize = "2em";
+                loader.statusDomElement.style.top = "50%";
+                loader.statusDomElement.style.right = "40%";
+                loader.statusDomElement.style.padding = "";
+                loader.statusDomElement.style.textAlign = "center";
+                loader.statusDomElement.style.width = "250px";
+
+                document.body.appendChild( loader.statusDomElement );
+                loader.showProgress =true;              
+                loader.load( 'assets/sponzaout/sponza.js', callbackFinished, 'assets/sponzaout/textures/' );
+
+            }
+                        
+            function callbackProgress( progress, result ) {
+                var bar = 250,
+                total = progress.totalModels + progress.totalTextures,
+                loaded = progress.loadModels + progress.loadTextures;
+
+                if ( total )
+                    bar = Math.floor( bar * loaded / total );
+
+                $( "bar" ).style.width = bar + "px";
+
+            }
+
+            function callbackFinished( geometry, materials ) {
+
+                var faceMaterial = new THREE.MeshFaceMaterial();
+                var lens = materials.length;
+
+                for ( var index = 0; index < lens; ++index ) {
+
+                    faceMaterial.materials[ index ] = materials[index];
+                }
+
+                var mesh = new THREE.Mesh( geometry, faceMaterial );                            
+                scene.add( mesh );
+                loader.statusDomElement.style.display = "none";
+            }
+
+            function callbackFinishedObj( object ) {
+
+                scene.add( object );
+            }
+
+            function animate() {
+
+                requestAnimationFrame( animate );
+
+                // vrPosSensor is not supported on mobile devices.
+                // if ( vrPosSensor ) {
+                //     var state = vrPosSensor.getState();
+
+                //     if ( state.hasOrientation ) {
+                //         camera.quaternion.set(
+                //             state.orientation.x, 
+                //             state.orientation.y, 
+                //             state.orientation.z, 
+                //             state.orientation.w);
+                //     }
+
+                //     if ( state.hasPosition ) {
+
+                //     }
+                // }
+
+                control.update();
+                vrDeviceEffect.render( scene, camera );                      
+            }
+
+        </script>
+    </body>
+</html>
