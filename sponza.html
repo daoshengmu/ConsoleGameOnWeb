@@ -395,12 +395,6 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
                 postprocessing.scene.add( postprocessing.quad );
             }
                        
-            function loadSceneObj() {
-                            
-                var loader = new THREE.OBJMTLLoader();                               
-                loader.load( 'assets/sponza/sponza.obj', 'assets/sponza/sponza.mtl', callbackFinishedObj );
-            }
-                       
             function loadScene() {
                            
                 loader = new THREE.BinaryLoader( true );                      
@@ -413,7 +407,7 @@ Spiral sampling http://web.archive.org/web/20120421191837/http://www.cgafaq.info
 
                 document.body.appendChild( loader.statusDomElement );
                 loader.showProgress =true;              
-                loader.load( 'assets/sponzaout/sponza.js', callbackFinished, 'assets/sponzaout/textures/' );
+                loader.load( 'WebVROnFxOS/sponza/assets/sponzaout/sponza.js', callbackFinished, 'WebVROnFxOS/sponza/assets/sponzaout/textures/' );
 
             }
                         

@@ -1,0 +1,118 @@
+<html>
+<head><script type="text/javascript">var NREUMQ=NREUMQ||[];NREUMQ.push(["mark","firstbyte",new Date().getTime()]);</script>
+<title>Leap WebSocket JSON Viewer</title>
+<script>
+var ws;
+var paused = false;
+var pauseOnGesture = false;
+var focusListener;
+var blurListener;
+
+// Support both the WebSocket and MozWebSocket objects
+if ((typeof(WebSocket) == 'undefined') &&
+    (typeof(MozWebSocket) != 'undefined')) {
+  WebSocket = MozWebSocket;
+}
+
+// Create the socket with event handlers
+function init() {
+  // Create and open the socket
+  ws = new WebSocket("ws://localhost:6437/v6.json");//use latest
+
+  // On successful connection
+  ws.onopen = function(event) {
+    var enableMessage = JSON.stringify({enableGestures: false});
+    ws.send(enableMessage); // Enable gestures
+    ws.send(JSON.stringify({focused: true})); // claim focus
+    
+    focusListener = window.addEventListener('focus', function(e) {
+        ws.send(JSON.stringify({focused: true})); // claim focus
+     });
+
+    blurListener = window.addEventListener('blur', function(e) {
+         ws.send(JSON.stringify({focused: false})); // relinquish focus
+     });
+
+    ws.send( JSON.stringify( { optimizeHMD: true } ) );
+     
+    document.getElementById("main").style.visibility = "visible";
+    document.getElementById("connection").innerHTML = "WebSocket connection open!";
+  };
+
+  // On message received
+  ws.onmessage = function(event) {
+    if (!paused) {
+      var obj = JSON.parse(event.data);
+      var str = JSON.stringify(obj, undefined, 2);
+      if(!obj.id){
+          document.getElementById("eventoutput").innerHTML = '<pre>' + str + '</pre>';
+          console.log(str);
+      } else {
+          document.getElementById("frameoutput").innerHTML = '<pre>' + str + '</pre>';
+      }
+      if (pauseOnGesture && obj.gestures.length > 0) {
+        togglePause();
+      }
+    }
+  };
+
+  // On socket close
+  ws.onclose = function(event) {
+    ws = null;
+    window.removeListener("focus", focusListener);
+    window.removeListener("blur", blurListener);
+    document.getElementById("main").style.visibility = "hidden";
+    document.getElementById("connection").innerHTML = "WebSocket connection closed";
+  }
+
+  // On socket error
+  ws.onerror = function(event) {
+    alert("Received error");
+  };
+}
+
+function togglePause() {
+  paused = !paused;
+
+  if (paused) {
+    document.getElementById("pause").innerText = "Resume";
+    ws.send(JSON.stringify({focused: false})); // relinquish focus
+  } else {
+    document.getElementById("pause").innerText = "Pause";
+    ws.send(JSON.stringify({focused: true})); // request focus
+  }
+}
+
+function pauseForGestures() {
+  if (document.getElementById("pauseOnGesture").checked) {
+    pauseOnGesture = true;
+  } else {
+    pauseOnGesture = false;
+  }
+}
+</script>
+</head>
+<body onload="init();">
+<h1>Leap WebSocket JSON Viewer</h1>
+<button id="pause" onclick="togglePause()">Pause</button>
+<input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
+<div id="connection">WebSocket not connected</div>
+<div id="main" style="visibility:hidden">
+  <h3>Last WebSocket event:</h3>
+  <div id="eventoutput"></div>
+  <h3>JSON Frame data:</h3>
+  <div id="frameoutput"></div>
+</div>
+<script type="text/javascript">if (!NREUMQ.f) { NREUMQ.f=function() {
+NREUMQ.push(["load",new Date().getTime()]);
+var e=document.createElement("script");
+e.type="text/javascript";
+e.src=(("http:"===document.location.protocol)?"http:":"https:") + "//" +
+  "js-agent.newrelic.com/nr-100.js";
+document.body.appendChild(e);
+if(NREUMQ.a)NREUMQ.a();
+};
+NREUMQ.a=window.onload;window.onload=NREUMQ.f;
+};
+NREUMQ.push(["nrfj","bam.nr-data.net","35bb71d9c5","1717595","JQ1aFhAMClhVEx4MVxE9UA0BFgtRXhVQFlsJDBsUCwYR",7,228,new Date().getTime(),"","","","",""]);</script></body>
+</html>

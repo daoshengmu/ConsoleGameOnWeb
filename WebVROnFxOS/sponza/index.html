@@ -13,7 +13,6 @@ date: 06/17/2015
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
         <style>
             body {
                 background-color: #000000;
@@ -59,9 +58,10 @@ date: 06/17/2015
         </style>
         <script src="lib/three.min.js"></script>
         <script src="lib/threejs/ssao.min.js"></script>
-        <script src="lib/sweetalert.min.js"></script> 
+        <script src="lib/leap-0.6.4.js"></script>
         <script src="js/threejs/VREffect.js"></script>
         <script src="js/threejs/DeviceOrientationControls.js"></script>
+        <script src="js/leapMotion.js"></script>
     </head>
     <body>
         <div id="container"></div>
@@ -84,6 +84,7 @@ date: 06/17/2015
             var bAddStats = false;
             var control;
             var vrDeviceEffect, vrPosSensor;
+            var leapControl;
 
             init();
 
@@ -110,7 +111,6 @@ date: 06/17/2015
                 directionalLight.position.set( 0, 0, 1 ).normalize();
                 scene.add( directionalLight );            
                                     
-
                 loadScene(); // load sponza scene
                 
                 vrDeviceEffect = new THREE.VREffect(renderer);
@@ -119,6 +119,9 @@ date: 06/17/2015
                 // Note that the API is still vendor-prefixed in browsers implementing it
 
                 control = new THREE.DeviceOrientationControls( camera );
+                leapControl = new LeapMotionControl();
+                leapControl.listen( camera );
+
                 animate();
             }
 
@@ -132,10 +135,7 @@ date: 06/17/2015
 
             function onVRDeviceConnected(devices) {
 
-                if (devices.length) {
-                    swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
-                    type: "success", timer: 3000,   showConfirmButton: false });
-                } else {
+                if (!devices.length) {
                     return;
                 }
 
@@ -167,6 +167,12 @@ date: 06/17/2015
                 
                 renderer.setSize( window.innerWidth, window.innerHeight );
             }
+
+            function loadSceneObj() {
+                            
+                var loader = new THREE.OBJMTLLoader();                               
+                loader.load( 'assets/sponza/sponza.obj', 'assets/sponza/sponza.mtl', callbackFinishedObj );
+            }
                        
             function loadScene() {
                            
@@ -180,7 +186,7 @@ date: 06/17/2015
 
                 document.body.appendChild( loader.statusDomElement );
                 loader.showProgress =true;              
-                loader.load( 'WebVROnFxOS/sponza/assets/sponzaout/sponza.js', callbackFinished, 'WebVROnFxOS/sponza/assets/sponzaout/textures/' );
+                loader.load( 'assets/sponzaout/sponza.js', callbackFinished, 'assets/sponzaout/textures/' );
 
             }
                         

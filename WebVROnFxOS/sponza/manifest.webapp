@@ -1,0 +1,65 @@
+{
+  "name": "SponzaVR",
+  "description": "Web VR on Firefox OS",
+  "launch_path": "/index.html",
+  "fullscreen": true,
+  "permissions" : {
+  "tcp-socket" : {
+      "description" : "Create TCP sockets and communicate over them."
+    }
+  },
+  "developer": {
+    "name": "The Gaia Team",
+    "url": "https://github.com/mozilla-b2g/gaia"
+  },
+  "locales": {
+    "ar": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "de": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "el": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "en-US": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "es": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "fr": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "it": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "pt-BR": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "ru": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "tr": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    },
+    "zh-TW": {
+      "name": "SponzaVR",
+      "description": "Web app SponzaVR"
+    }
+  },
+  "default_locale": "en-US",
+  "icons": {
+    "128": "/style/icons/Blank.png"
+  }
+}

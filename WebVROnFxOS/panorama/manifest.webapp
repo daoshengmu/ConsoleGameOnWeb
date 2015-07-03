@@ -1,0 +1,60 @@
+{
+  "name": "PanoramaVR",
+  "description": "Web VR on Firefox OS",
+  "launch_path": "/index.html",
+  "fullscreen": true,
+  "developer": {
+    "name": "The Gaia Team",
+    "url": "https://github.com/mozilla-b2g/gaia"
+  },
+  "locales": {
+    "ar": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "de": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "el": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "en-US": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "es": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "fr": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "it": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "pt-BR": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "ru": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "tr": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    },
+    "zh-TW": {
+      "name": "PanoramaVR",
+      "description": "Web app PanoramaVR"
+    }
+  },
+  "default_locale": "en-US",
+  "icons": {
+    "128": "/style/icons/Blank.png"
+  }
+}
