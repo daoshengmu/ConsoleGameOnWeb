@@ -3,11 +3,6 @@
   "description": "Web VR on Firefox OS",
   "launch_path": "/index.html",
   "fullscreen": true,
-  "permissions" : {
-  "tcp-socket" : {
-      "description" : "Create TCP sockets and communicate over them."
-    }
-  },
   "developer": {
     "name": "The Gaia Team",
     "url": "https://github.com/mozilla-b2g/gaia"
