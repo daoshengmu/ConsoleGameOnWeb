@@ -46,7 +46,7 @@ LeapMotionControl.prototype.listen = function( camera ) {
 
         // Create and open the socket
         //ws = new WebSocket("ws://localhost:6437/v6.json");
-        ws = new WebSocket("ws://192.168.43.107:6437/v6.json"); // Remote connection
+        ws = new WebSocket("ws://192.168.137.170:6437/v6.json"); // Remote connection
 
         // On successful connection
         ws.onopen = function( event ) {
