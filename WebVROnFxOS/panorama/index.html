@@ -112,28 +112,31 @@ date: 04/23/2015
 
 				requestAnimationFrame( gameLoop );
 
-				// vrPosSensor is not supported on mobile devices.
-				// if ( vrPosSensor ) {
-				// 	var state = vrPosSensor.getState();
+				// vrPosSensor if has been supported on mobile devices?
+				if ( vrPosSensor ) {
+					var state = vrPosSensor.getState();
 
-				// 	if ( state.hasOrientation ) {
-				// 		// camera.quaternion.set(
-				// 		// 	state.orientation.x, 
-				// 		// 	state.orientation.y, 
-				// 		// 	state.orientation.z, 
-				// 		// 	state.orientation.w);
+					if ( state.hasOrientation ) {
+			
+						var q0 = new THREE.Quaternion( state.orientation.x,
+						state.orientation.z,
+						state.orientation.y,
+						state.orientation.w );
+						var q1 = new THREE.Quaternion( -Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis, camera at right version
 
-				// 		camera.quaternion.set(
-				// 			orientation.x, 
-				// 			orientation.y, 
-				// 			orientation.z, 
-				// 			1.0);
+						q0.multiply( q1 ); // camera looks out the back of the device, not the top
 
-				// 		//console.log(state.orientation);
-				// 	}
-				// }
+						camera.quaternion.set(
+							q0.x, 
+							q0.z,
+							q0.y, 
+							q0.w);
 
-				control.update();
+						console.log(state.orientation);
+					}
+				}
+
+				//control.update();
 				vrDeviceEffect.render( scene, camera );
 			}
 
