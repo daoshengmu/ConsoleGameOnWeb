@@ -25,6 +25,7 @@ date: 04/23/2015
 			var vrHMD, vrPosSensor;
 			var vrDeviceEffect;
 			var control;
+			var bCardboard = false;
 
 			init();
 
@@ -100,6 +101,10 @@ date: 04/23/2015
 					if ( vrHMD && devices[i] instanceof PositionSensorVRDevice
 						&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId ) {
 						vrPosSensor = devices[i];
+
+						if ( vrPosSensor.deviceName.indexOf( 'Cardboard' ) ) {
+							bCardboard = true;
+						}
 						// We just want to get the first VR device.
 						break;
 					}
@@ -118,25 +123,40 @@ date: 04/23/2015
 
 					if ( state.hasOrientation ) {
 			
-						var q0 = new THREE.Quaternion( state.orientation.x,
-						state.orientation.z,
-						state.orientation.y,
-						state.orientation.w );
-						var q1 = new THREE.Quaternion( -Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis, camera at right version
+						if ( bCardboard ) {
 
-						q0.multiply( q1 ); // camera looks out the back of the device, not the top
+							var q0 = new THREE.Quaternion( state.orientation.x,
+							state.orientation.z,
+							state.orientation.y,
+							state.orientation.w );
+							var q1 = new THREE.Quaternion( -Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis, camera at right version
 
-						camera.quaternion.set(
+							q0.multiply( q1 ); // camera looks out the back of the device, not the top
+							camera.quaternion.set(
 							q0.x, 
 							q0.z,
 							q0.y, 
 							q0.w);
 
-						console.log(state.orientation);
+						} else {
+							// Oculus device
+							camera.quaternion.set(
+							state.orientation.x, 
+							state.orientation.y,
+							state.orientation.z, 
+							state.orientation.w);
+						}		
+
+						//console.log(state.orientation);
+					} else {
+
+						control.update(); // For some devices that do not support sensor. 	
 					}
+				} else {
+
+					control.update(); // For some devices that do not support sensor. 	
 				}
 
-				//control.update();
 				vrDeviceEffect.render( scene, camera );
 			}
 
