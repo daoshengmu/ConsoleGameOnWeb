@@ -54,7 +54,7 @@ date: 04/23/2015
 					stencil: false
 				};
        
-          		renderer = new THREE.WebGLRenderer( attributes );
+				renderer = new THREE.WebGLRenderer( attributes );
 				// In order to support v.69, I comment this line. When we are ready to v.71, we can enable it. 
 				//renderer.setPixelRatio(window.devicePixelRatio);
 
@@ -102,7 +102,7 @@ date: 04/23/2015
 						&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId ) {
 						vrPosSensor = devices[i];
 
-						if ( vrPosSensor.deviceName.indexOf( 'Cardboard' ) ) {
+						if ( vrPosSensor.deviceName.indexOf( 'Cardboard' ) >= 0 ) {
 							bCardboard = true;
 						}
 						// We just want to get the first VR device.
@@ -120,6 +120,11 @@ date: 04/23/2015
 				// vrPosSensor if has been supported on mobile devices?
 				if ( vrPosSensor ) {
 					var state = vrPosSensor.getState();
+
+					if ( state.hasPosition ) {
+
+						//console.log( state.position );
+					}
 
 					if ( state.hasOrientation ) {
 			
