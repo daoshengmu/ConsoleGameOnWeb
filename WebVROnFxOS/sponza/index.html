@@ -84,7 +84,8 @@ date: 06/17/2015
             var bAddStats = false;
             var control;
             var vrDeviceEffect, vrPosSensor;
-            var leapControl;
+            var leapControl, bCardboard = false;
+            var bFullScreen = false, fKeyCode = 70;
 
             init();
 
@@ -122,6 +123,11 @@ date: 06/17/2015
                 leapControl = new LeapMotionControl();
                 leapControl.listen( camera );
 
+                document.addEventListener( 'keydown', onKeyDown, false);
+                document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
+                    onFullscreenChanged( event );
+                });
+
                 animate();
             }
 
@@ -132,6 +138,60 @@ date: 06/17/2015
                     navigator.mozGetVRDevices(onVRDeviceConnected);
                 }
             }, false);
+
+            function onFullscreenChanged( event ) {
+
+                if ( document.fullscreenEnabled ) {
+                    document.fullscreenElement;
+                }                
+            }
+
+            function triggerFullscreen() {
+
+                bFullScreen = !bFullScreen;
+
+                if ( bFullScreen ) {
+                    vrDeviceEffect.setFullScreen( bFullScreen );
+                    return;
+                }
+
+                 // toggle fullscreen
+                if ( !document.fullscreenElement
+                    && !document.mozFullScreenElement 
+                    && !document.webkitFullscreenElement 
+                    && !document.msFullscreenElement ) {  // current working methods
+
+                    if ( document.documentElement.requestFullscreen ) {
+                        document.documentElement.requestFullscreen();
+                    } else if ( document.documentElement.msRequestFullscreen ) {
+                        document.documentElement.msRequestFullscreen();
+                    } else if ( document.documentElement.mozRequestFullScreen ) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if ( document.documentElement.webkitRequestFullscreen ) {
+                        document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                      document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                      document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                      document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                      document.webkitExitFullscreen();
+                    }
+
+                    onWindowResize();
+                }
+            }
+
+            function onKeyDown(event) {
+                var key = event.keyCode || event.which;
+
+                if (key == fKeyCode) {
+                    triggerFullscreen();
+                }
+            }
 
             function onVRDeviceConnected(devices) {
 
@@ -149,6 +209,9 @@ date: 06/17/2015
                         && devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
                         vrPosSensor = devices[i];
 
+                        if ( vrPosSensor.deviceName.indexOf( 'Cardboard' ) >= 0 ) {
+                            bCardboard = true;
+                        }
                         // We just want to get the first VR device.
                         break;
                     }
@@ -226,24 +289,51 @@ date: 06/17/2015
 
                 requestAnimationFrame( animate );
 
-                // vrPosSensor is not supported on mobile devices.
-                // if ( vrPosSensor ) {
-                //     var state = vrPosSensor.getState();
+                // vrPosSensor if has been supported on mobile devices?
+                if ( vrPosSensor ) {
+                    var state = vrPosSensor.getState();
 
-                //     if ( state.hasOrientation ) {
-                //         camera.quaternion.set(
-                //             state.orientation.x, 
-                //             state.orientation.y, 
-                //             state.orientation.z, 
-                //             state.orientation.w);
-                //     }
+                    if ( state.hasPosition ) {
 
-                //     if ( state.hasPosition ) {
+                        //console.log( state.position );
+                    }
 
-                //     }
-                // }
+                    if ( state.hasOrientation ) {
+            
+                        if ( bCardboard ) {
 
-                control.update();
+                            var q0 = new THREE.Quaternion( state.orientation.x,
+                            state.orientation.z,
+                            state.orientation.y,
+                            state.orientation.w );
+                            var q1 = new THREE.Quaternion( -Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis, camera at right version
+
+                            q0.multiply( q1 ); // camera looks out the back of the device, not the top
+                            camera.quaternion.set(
+                            q0.x, 
+                            q0.z,
+                            q0.y, 
+                            q0.w);
+
+                        } else {
+                            // Oculus device
+                            camera.quaternion.set(
+                            state.orientation.x, 
+                            state.orientation.y,
+                            state.orientation.z, 
+                            state.orientation.w);
+                        }       
+
+                        //console.log(state.orientation);
+                    } else {
+
+                        control.update(); // For some devices that do not support sensor.   
+                    }
+                } else {
+
+                    control.update(); // For some devices that do not support sensor.   
+                }
+
                 vrDeviceEffect.render( scene, camera );                      
             }
 
