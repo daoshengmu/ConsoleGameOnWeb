@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<!-- 
+Web VR API experiment of Occulus DK2
+author: daoshengmu, http://dsmu.me
+date: 04/23/2015
+-->
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link href="css/style.css" rel="stylesheet">
+        <link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
+        <script src="lib/jquery-1.11.2.min.js"></script>
+        <script src="lib/sweetalert.min.js"></script>
+        <script src="lib/three.min.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+        <script src="js/gui.js"></script>
+        <script src="js/demoConfig.js"></script>
+        <script src="js/threejs/OculusRiftEffect.js"></script>
+        <script src="js/threejs/VREffect.js"></script>
+        <script src="gl_worker.js"></script>
+        <title>WebGL for worker Demo</title>
+    </head>
+    <body>
+        <div id="info">
+            Worker for WebVr demo. The panorama image is from <a href="http://www.lemis.com/grog/photos/Photos.php?dirdate=20120601" target="_blank">Greg</a>
+        </div>
+        <div id="container"></div>
+        <canvas id="c" width="64" height="64"></canvas>
+        <script type="text/javascript">
+            var panoramaConfig;
+            var camera, scene, renderer;
+            var vrEffect;
+            var vrHMD, vrPosSensor;
+            var vrDeviceEffect;
+
+            var isUserInteracting = false,
+            onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+            lon = 0, onMouseDownLon = 0,
+            lat = 0, onMouseDownLat = 0,
+            phi = 0, theta = 0;
+            var lastRenderMode = PanoramaConfig.GENERAL_MODE;
+            var bFullScreen = false, fKeyCode = 70;
+
+            //init();
+            initWorker();
+
+            function initWorker() {
+
+                var canvas = document.getElementById('c');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                var proxy = canvas.transferControlToOffscreen();   // new interface added by offscreencanvas.
+                
+                if (window.Worker) { 
+
+                    var worker = new Worker("js/gl_worker.js");
+                    
+                    worker.onmessage = function( evt ) {
+                        console.log('Message received from worker ' + evt.data );
+                    };
+
+                    //worker.postMessage(['test123']);   // transfer it to worker
+                    worker.postMessage( { test: 'webgl_offscreen', canvas: proxy}, [proxy]);   // transfer it to worker
+                
+                }
+            }
+
+            function init() {
+
+                var container, mesh;
+
+                container = document.getElementById('container');
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1100);
+
+                camera.target = new THREE.Vector3(0, 0, 0);
+
+                scene = new THREE.Scene();
+
+                var geometry = new THREE.SphereGeometry(500, 60, 40);
+                geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+
+                var material = new THREE.MeshBasicMaterial( {
+                    map: THREE.ImageUtils.loadTexture('images/verandah-centre-equirectangular.jpg')
+                });
+
+                mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+
+                renderer = new THREE.WebGLRenderer();
+                // In order to support v.69, I comment this line. When we are ready to v.71, we can enable it. 
+                //renderer.setPixelRatio(window.devicePixelRatio);
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+                panoramaConfig = new PanoramaConfig( renderer );
+                initPanoramaGUI( panoramaConfig );
+
+                // Here is the effect for the Oculus Rift
+                // worldScale 100 means that 100 Units == 1m
+                vrEffect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+                vrEffect.setSize( window.innerWidth, window.innerHeight );
+
+                vrDeviceEffect = new THREE.VREffect(renderer);
+
+                container.appendChild( renderer.domElement );
+
+                window.addEventListener( 'resize', onWindowResize, false );
+                document.addEventListener( 'keydown', onKeyDown, false);
+                document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
+                    onFullscreenChanged( event );
+                });
+
+                document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+                document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );	
+                document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false);	
+
+                gameLoop();
+            }
+
+            window.addEventListener("load", function() {
+                if (navigator.getVRDevices) {
+                    navigator.getVRDevices().then(vrDeviceCallback);
+                } else if (navigator.mozGetVRDevices) {
+                    navigator.mozGetVRDevices(vrDeviceCallback);
+                }
+            }, false);
+
+            function onKeyDown(event) {
+                var key = event.keyCode || event.which;
+
+                if (key == fKeyCode) {
+                    triggerFullscreen();
+                }
+            }
+
+            function onWindowResize() {
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                vrEffect.setSize( window.innerWidth, window.innerHeight );
+                vrDeviceEffect.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            function onFullscreenChanged( event ) {
+
+                if ( document.fullscreenEnabled ) {
+                    document.fullscreenElement;
+                }                
+            }
+
+            function triggerFullscreen() {
+
+                bFullScreen = !bFullScreen;
+
+                if ( panoramaConfig.getRenderMode() == PanoramaConfig.VRDEVICE_MODE
+                	&& vrPosSensor && bFullScreen ) {
+                    vrDeviceEffect.setFullScreen( bFullScreen );
+                    return;
+                }
+
+                 // toggle fullscreen
+                if ( !document.fullscreenElement
+                    && !document.mozFullScreenElement 
+                    && !document.webkitFullscreenElement 
+                    && !document.msFullscreenElement ) {  // current working methods
+
+                    if ( document.documentElement.requestFullscreen ) {
+                        document.documentElement.requestFullscreen();
+                    } else if ( document.documentElement.msRequestFullscreen ) {
+                        document.documentElement.msRequestFullscreen();
+                    } else if ( document.documentElement.mozRequestFullScreen ) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if ( document.documentElement.webkitRequestFullscreen ) {
+                        document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                      document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                      document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                      document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                      document.webkitExitFullscreen();
+                    }
+
+                    onWindowResize();
+                }
+            }
+
+            function vrDeviceCallback(devices) {
+
+                if (devices.length) {
+                	swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
+                	type: "success", timer: 3000,   showConfirmButton: false });
+                } else {
+                	return;
+                }
+
+                for (var i = 0; i < devices.length; ++i) {
+
+                	if (devices[i] instanceof HMDVRDevice) {
+                	   vrHMD = devices[i];
+                	}	
+
+                	if (vrHMD && devices[i] instanceof PositionSensorVRDevice
+                		&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+                	   vrPosSensor = devices[i];
+                		// We just want to get the first VR device.
+                	   break;
+                	}
+                }
+            }
+
+            function onDocumentMouseDown( event ) {
+
+                //event.preventDefault(); // --- this will cause dat.GUI not work.
+
+                isUserInteracting = true;
+
+                onMouseDownMouseX = event.clientX;
+                onMouseDownMouseY = event.clientY;
+
+                onMouseDownLon = lon;
+                onMouseDownLat = lat;
+            }
+
+            function onDocumentMouseMove( event ) {
+
+                if ( isUserInteracting === true ) {
+
+                    lon = ( onMouseDownMouseX - event.clientX ) * 0.1 + onMouseDownLon;
+                    lat = ( event.clientY - onMouseDownMouseY ) * 0.1 + onMouseDownLat;
+                }
+            }
+
+            function onDocumentMouseUp( event ) {
+
+                isUserInteracting = false;
+            }
+
+            function onDocumentMouseWheel( event ) {
+                // WebKit
+                if ( event.wheelDeltaY ) {
+
+                    camera.fov -= event.wheelDeltaY * 0.05;
+                    vrEffect.zoom( -event.wheelDeltaY * 0.05 );
+
+                	if ( vrHMD )
+                	   vrDeviceEffect.zoom( -event.wheelDeltaY * 0.05 );
+                // Opera / Explorer 9
+                } else if ( event.wheelDelta ) {
+
+                    camera.fov -= event.wheelDelta * 0.05;
+                    vrEffect.zoom( -event.wheelDelta * 0.05 );
+
+                    if ( vrHMD )
+                	   vrDeviceEffect.zoom( -event.wheelDelta * 0.05 );
+                // Firefox
+                } else if ( event.detail ) {
+
+                    camera.fov += event.detail * 1.0;
+                    vrEffect.zoom( event.detail * 1.0 );
+
+                    if ( vrHMD )
+                        vrDeviceEffect.zoom( event.detail * 1.0 );
+                }
+
+                camera.updateProjectionMatrix();
+            }
+
+            function gameLoop() {
+
+                requestAnimationFrame( gameLoop );
+
+                lat = Math.max( -85, Math.min( 85, lat ) );
+                phi = THREE.Math.degToRad( 90 - lat );
+                theta = THREE.Math.degToRad( lon );
+
+                camera.target.x = 500 * Math.sin( phi ) * Math.cos( theta );
+                camera.target.y = 500 * Math.cos( phi );
+                camera.target.z = 500 * Math.sin( phi ) * Math.sin( theta );
+
+                camera.lookAt( camera.target );
+
+                var renderMode = panoramaConfig.getRenderMode();
+
+                if ( lastRenderMode != renderMode ) {
+                    onWindowResize();
+                    lastRenderMode = renderMode;
+                }
+
+                // For WebVR sensor
+                if ( vrPosSensor ) {
+                   var state = vrPosSensor.getState();
+
+                    if ( state.hasOrientation ) {
+                       camera.quaternion.set(
+                               state.orientation.x, 
+                               state.orientation.y, 
+                               state.orientation.z, 
+                               state.orientation.w);
+                    }
+
+                    if ( state.hasPosition ) {
+
+                    }
+                }
+
+                if ( renderMode == PanoramaConfig.GENERAL_MODE ) {
+                    renderer.render( scene, camera );
+                } else if ( renderMode == PanoramaConfig.VREFFECT_MODE ) {
+                    vrEffect.render( scene, camera );
+                } else if ( renderMode == PanoramaConfig.VRDEVICE_MODE ) {
+                    vrDeviceEffect.render( scene, camera );
+                } else {
+                    console.error( "Not define this render mode: " + renderMode );
+                }
+            }
+
+	</script>	
+    </body>
+</html>
