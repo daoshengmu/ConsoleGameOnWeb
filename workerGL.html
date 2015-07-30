@@ -19,7 +19,6 @@ date: 04/23/2015
         <script src="js/demoConfig.js"></script>
         <script src="js/threejs/OculusRiftEffect.js"></script>
         <script src="js/threejs/VREffect.js"></script>
-        <script src="gl_worker.js"></script>
         <title>WebGL for worker Demo</title>
     </head>
     <body>
@@ -65,6 +64,8 @@ date: 04/23/2015
                     worker.postMessage( { test: 'webgl_offscreen', canvas: proxy}, [proxy]);   // transfer it to worker
                 
                 }
+
+                //setInterval( animation, 16 );
             }
 
             function init() {
@@ -119,6 +120,10 @@ date: 04/23/2015
                 document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false);	
 
                 gameLoop();
+            }
+
+            function animation() {
+                console.log("animation loop");
             }
 
             window.addEventListener("load", function() {
