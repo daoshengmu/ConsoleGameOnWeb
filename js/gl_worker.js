@@ -19,3 +19,10 @@ onmessage = function(evt) {
     console.log('Posting message back to main script ' + evt.data.test );
     postMessage('Send message to main script');
 }
+
+setInterval( workerAnimation, 1600 );
+
+function workerAnimation() {
+    console.log( "worker animation loop..." );
+    postMessage("Calling back at : " + new Date().getTime());
+}

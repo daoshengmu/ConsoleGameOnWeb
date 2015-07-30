@@ -4,3 +4,10 @@ onmessage = function(e) {
   console.log('Posting message back to main script');
   postMessage(workerResult);
 }
+
+setInterval( workerAnimation, 1600 );
+
+function workerAnimation() {
+    postMessage("Calling back at : " + new Date().getTime());
+    console.log( "worker animation loop..." );
+}
