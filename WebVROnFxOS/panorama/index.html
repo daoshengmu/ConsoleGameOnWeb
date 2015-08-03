@@ -9,6 +9,7 @@ date: 04/23/2015
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link href="css/style.css" rel="stylesheet">
 		<script src="lib/three.min.js"></script>
 		<script src="js/threejs/VREffect.js"></script>
@@ -56,14 +57,12 @@ date: 04/23/2015
        
 				renderer = new THREE.WebGLRenderer( attributes );
 				// In order to support v.69, I comment this line. When we are ready to v.71, we can enable it. 
-				//renderer.setPixelRatio(window.devicePixelRatio);
-
-				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
 
 				vrDeviceEffect = new THREE.VREffect( renderer );
 
 				window.addEventListener( 'resize', onWindowResize, false );
-
 				container.appendChild( renderer.domElement );
 
 				if ( navigator.getVRDevices ) {
