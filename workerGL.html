@@ -57,10 +57,9 @@ date: 04/23/2015
                     var worker = new Worker("js/gl_worker.js");
                     
                     worker.onmessage = function( evt ) {
-                        console.log('Message received from worker ' + evt.data );
+                        //console.log('Message received from worker ' + evt.data );
                     };
 
-                    //worker.postMessage(['test123']);   // transfer it to worker
                     worker.postMessage( { test: 'webgl_offscreen', canvas: proxy}, [proxy]);   // transfer it to worker
                 
                 }
