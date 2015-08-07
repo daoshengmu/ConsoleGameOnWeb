@@ -1,58 +1,42 @@
 
-var Renderer = function() {
+var RendererModule = function() {
 
+	this.renderer = null;
     this.context = null;
     this.camera = null;
+    this.worldMtx = null;
+    this.cube = null;
 }
 
-var Cube = function() {
-
-    this.vertices = null;
-    this.indices = null;
-
-    this.vertexBuffer = null;
-    this.indexBuffer = null;
-
-    this.worldMatrix = mat4.create();
-}
-
-var Camera = function() {
-
-    this.worldMatrix = mat4.create();
-    this.viewMatrix = mat4.create();
-    this.projMatrix = mat4.create();
-}
-
-var renderer;
+var rendererModule;
+var rotateAngle = 0;
 
 onmessage = function(evt) {
 
     importScripts("../lib/gl-matrix.js");
+    importScripts("../lib/maximus.js");
 
     var canvas = evt.data.canvas;
-    renderer = new Renderer();
+	var vs = evt.data.vertexShader;
+	var ps = evt.data.pixelShader;
 
-    var context = canvas.getContext('webgl');    // get context, same as normal webgl
-    // You can submit draw call here!!
-    context.clearColor( 1.0, 0.0, 0.0, 1.0 );   // Just need to set once.
-    context.viewport( 0, 0, canvas.innerWidth, canvas.innerHeight );
+    rendererModule = new RendererModule();
 
-    // Render
-    context.clear( context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT );
+    var renderer = new Maximus.WebGLRenderer(); 
+	renderer.initGL(canvas);
 
-    // context.drawArray(...);
+	renderer.setClearColor( 1,1,0,1 );
+	renderer.initShaders( vs, ps );
+	rendererModule.renderer = renderer;
+	rendererModule.worldMtx = mat4.create();
 
-    // The draw is over, submit it to screen
-    context.commit();
-    // End of render
+	var dir = vec3.fromValues( 0.0, 0.0, -1.0 );
+	rendererModule.directionalLight = new Maximus.DirectionalLight( [1.0,1.0,1.0], 1.0, dir );
+	var redLambertMtr = new Maximus.LambertMaterial( [1.0, 0.0, 0.0, 1.0] );
+	var cube = new Maximus.Cube();
+	cube.init( renderer, redLambertMtr );
+	rendererModule.cube = cube;
 
-    renderer.context = context;
-    renderer.camera = new Camera();
-
-    // console.log( "mtx: " + renderer.camera.worldMatrix[1] );
-
-   // console.log('onMessage get ' + evt.data[0]);
-    //console.log('Posting message back to main script ' + evt.data.test );
     postMessage('Send message to main script');
 }
 
@@ -60,15 +44,22 @@ setInterval( workerAnimation, 16 );
 
 function workerAnimation() {
     
-    postMessage("Calling back at : " + new Date().getTime());
-    //console.log( "worker animation loop..." );
+	// postMessage("Calling back at : " + new Date().getTime());
 
-    var context = renderer.context;
+	render();	
+}
 
-    context.clearColor( 0.0, 0.5, 0.0, 1.0 );
+function render() {
 
-    // // Render 
-    context.clear( context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT );
+	var renderer = rendererModule.renderer;
+	var mtx = rendererModule.worldMtx;
+	mat4.identity( mtx );
+	mat4.translate( mtx, mtx, [0.0, 0.0, -7.0] );
 
-    context.commit();
+	rotateAngle += 5;         
+	mat4.rotateY( mtx, mtx, Maximus.Math.degToRad( rotateAngle ) );
+ 
+ 	renderer.setLight( rendererModule.directionalLight );
+ 	renderer.drawScene( mtx, rendererModule.cube );
+ 	renderer.getContext().commit();
 }
