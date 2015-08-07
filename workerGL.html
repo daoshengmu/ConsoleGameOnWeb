@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 
 <!-- 
-Web VR API experiment of Occulus DK2
+Worker on WebGL
 author: daoshengmu, http://dsmu.me
-date: 04/23/2015
+date: 08/07/2015
 -->
 
 <html lang="en">
@@ -78,10 +78,15 @@ date: 04/23/2015
                     };
 
                     worker.postMessage( { test: 'webgl_offscreen', canvas: proxy,
-                                        vertexShader: vs.innerHTML, pixelShader: ps.innerHTML }, [proxy]);
+                        vertexShader: vs.innerHTML, pixelShader: ps.innerHTML }, [proxy]);
                 
                 }
 
+            }
+
+            function onWindowResize() {
+
+               console.log("resize...");
             }
 
 	</script>	

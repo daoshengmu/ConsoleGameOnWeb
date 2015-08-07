@@ -1,17 +1,16 @@
 
-var RendererModule = function() {
+var rotateAngle = 0;
 
-	this.renderer = null;
-    this.context = null;
-    this.camera = null;
+var RendererModule = function() {
+    this.renderer = null;
     this.worldMtx = null;
     this.cube = null;
 }
 
-var rendererModule;
-var rotateAngle = 0;
+var rendererModule = null;
 
 onmessage = function(evt) {
+	var window = self;
 
     importScripts("../lib/gl-matrix.js");
     importScripts("../lib/maximus.js");
@@ -19,7 +18,6 @@ onmessage = function(evt) {
     var canvas = evt.data.canvas;
 	var vs = evt.data.vertexShader;
 	var ps = evt.data.pixelShader;
-
     rendererModule = new RendererModule();
 
     var renderer = new Maximus.WebGLRenderer(); 
@@ -37,7 +35,9 @@ onmessage = function(evt) {
 	cube.init( renderer, redLambertMtr );
 	rendererModule.cube = cube;
 
-    postMessage('Send message to main script');
+	window.addEventListener( 'resize', onWindowResize, false );
+
+    postMessage( "Send script to main script" );
 }
 
 setInterval( workerAnimation, 16 );
@@ -63,3 +63,11 @@ function render() {
  	renderer.drawScene( mtx, rendererModule.cube );
  	renderer.getContext().commit();
 }
+
+function onWindowResize() {
+
+	console.log('resize');
+	var renderer = rendererModule.renderer;
+	renderer.setSize( window.innerWidth, window.innerHeight );
+}
+
