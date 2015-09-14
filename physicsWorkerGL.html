@@ -1,0 +1,406 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Ellis's physics three.js demo</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    </head>
+    <body>
+    <canvas id="c" width="640" height="640"></canvas>
+    <style type="text/css">
+        * {
+            margin:0;
+            padding:0;
+        }
+        body {
+            overflow: hidden;
+            font-family: Monospace;
+        }
+    </style>
+        <script id="shader-vs" type="x-shader/x-vertex">
+            attribute vec3 POSITION;
+            attribute vec4 COLOR;
+            attribute vec3 NORMAL;
+            
+            varying vec4 outCOLOR0;
+            varying vec3 outNORMAL;
+            
+            uniform mat4 uMVMatrix;
+            uniform mat4 uPMatrix;
+            
+            void main(void) {
+                gl_Position = uPMatrix * uMVMatrix * vec4(POSITION, 1.0);
+                
+                outCOLOR0 = COLOR;
+                outNORMAL = (uMVMatrix * vec4( NORMAL, 0.0 )).xyz;
+            }
+        </script>
+        <script id="shader-fs" type="x-shader/x-fragment">
+            precision mediump float;
+            
+            varying vec4 outCOLOR0;
+            varying vec3 outNORMAL;
+            uniform vec4 matDiffuse;
+            uniform vec4 lightDir;
+            uniform vec4 lightColor;
+            
+            void main(void) {
+                vec4 pixelColor;
+                
+                pixelColor.w = matDiffuse.w * outCOLOR0.w;
+                vec3 vNormal = normalize( outNORMAL );
+                float lightAmount = dot( vNormal, vec3(lightDir) );  
+                
+                pixelColor.xyz = matDiffuse.xyz * lightColor.xyz * lightAmount;
+                gl_FragColor = pixelColor;
+            }
+        </script>
+        <script src="lib/cannon.js"></script>
+        <script type="text/javascript">
+           // var mesh;
+           // var scene;
+           // var camera;
+           // var renderer;
+
+           // var demo = new CANNON.Demo();
+            var size = 1;
+            var height = 5;
+            var dampling = 0.01;
+            var mass = 10;
+           // var sphereShape;
+           // var ballMaterial;
+           // var groundMaterial;
+           // var ballGroundContact;
+            var world;
+            var startTime = window.performance.now();
+
+            init();
+            animate();
+
+            function init() {
+
+                initWorker();
+
+                world = new CANNON.World();
+                world.broadphase = new CANNON.NaiveBroadphase();
+                world.gravity.set(0,-10,0);
+                world.solver.tolerance = 0.001;
+
+                // ground plane
+                groundMaterial = new CANNON.Material();
+                var groundShape = new CANNON.Plane();
+                var groundBody = new CANNON.Body( { mass: 0, material: groundMaterial } );
+                groundBody.addShape( groundShape );
+                world.addBody( groundBody );
+
+                var stone = new CANNON.Material('stone');
+                var stone_stone = new CANNON.ContactMaterial(stone, stone, {
+                  friction: 0.3,
+                  restitution: 0.2
+                });
+                world.addContactMaterial(stone_stone);
+
+                // plane -x
+                var planeShapeXmin = new CANNON.Plane();
+                var planeXmin = new CANNON.Body({ mass: 0, material: stone });
+                planeXmin.addShape(planeShapeXmin);
+                planeXmin.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),Math.PI/2);
+                planeXmin.position.set(-10,0,0);
+                world.addBody(planeXmin);
+
+                // Plane +x
+                var planeShapeXmax = new CANNON.Plane();
+                var planeXmax = new CANNON.Body({ mass: 0, material: stone });
+                planeXmax.addShape(planeShapeXmax);
+                planeXmax.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),-Math.PI/2);
+                planeXmax.position.set(10,0,0);
+                world.addBody(planeXmax);
+
+                 // Plane -y
+                var planeShapeYmin = new CANNON.Plane();
+                var planeYmin = new CANNON.Body({ mass: 0, material: stone });
+                planeYmin.addShape(planeShapeYmin);
+                planeYmin.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+                planeYmin.position.set(0,-10,0);
+                world.addBody(planeYmin);
+
+                 // Plane +y
+                var planeShapeYmin = new CANNON.Plane();
+                var planeYmin = new CANNON.Body({ mass: 0,  material: stone });
+                planeYmin.addShape(planeShapeYmin);
+                planeYmin.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI/2);
+                planeYmin.position.set(0,10,0);
+                world.addBody(planeYmin);
+
+                // Plane +z
+                var planeShapeZmax = new CANNON.Plane();
+                var planeZmax = new CANNON.Body({ mass: 0, material: stone });
+                planeZmax.addShape(planeShapeZmax);
+                planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI);
+                planeZmax.position.set(0,0,20);
+                world.addBody(planeZmax);
+
+                 // Shape on plane
+                sphereShape = new CANNON.Sphere( size );
+                ballMaterial = new CANNON.Material();
+                var shapeBody1 = new CANNON.Body( {
+                    mass: mass,
+                    material: ballMaterial,
+                    position: new CANNON.Vec3( 3 * size, size, height )
+                });
+                shapeBody1.addShape( sphereShape );
+                shapeBody1.linearDampling = dampling;
+                world.addBody( shapeBody1 );
+
+                var shapeBody2 = new CANNON.Body( {
+                    mass: mass,
+                    material: ballMaterial,
+                    position: new CANNON.Vec3( 0 * size, size, height )
+                });
+                shapeBody2.addShape( sphereShape );
+                shapeBody2.linearDampling = dampling;
+                world.addBody( shapeBody2 );
+
+                var shapeBody3 = new CANNON.Body( {
+                    mass: mass,
+                    material: ballMaterial,
+                    position: new CANNON.Vec3( -3 * size, size, height )
+                });
+                shapeBody3.addShape( sphereShape );
+                shapeBody3.linearDampling = dampling;
+                world.addBody( shapeBody3 );
+
+                generateBalls();
+                // Create contact material behaviour
+                var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
+
+                world.addContactMaterial( ballGroundContact );
+            }
+
+            function initWorker() {
+
+               var canvas = document.getElementById('c');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                var proxy = canvas.transferControlToOffscreen();   // new interface added by offscreencanvas.
+                var vs = document.getElementById("shader-vs");
+                var ps = document.getElementById("shader-fs");
+
+                if ( window.Worker ) { 
+
+                    var worker = new Worker("js/gl_worker_three.js");
+                    
+                    worker.onmessage = function( evt ) {
+                        console.log('Message received from worker ' + evt.data );
+                    };
+
+                    worker.postMessage( { test: 'webgl_offscreen', canvas: proxy,
+                        vertexShader: vs.innerHTML, pixelShader: ps.innerHTML }, [proxy]);
+                
+                }
+            }
+
+            function animate( timestamp ) {
+
+                if ( !timestamp ) {
+                    timestamp = startTime;
+                }
+
+                var diffTime = timestamp - startTime;
+                startTime = timestamp;
+
+                world.step( diffTime ); // Update the phyics world.
+                requestAnimationFrame( animate );
+            }
+           
+           // demo.addScene("BallBouncing", function() {
+
+           //      world = demo.getWorld();
+           //      world.gravity.set( 0, 0, -10 );
+           //      world.broadphase = new CANNON.NaiveBroadphase();
+
+           //      // ground plane
+           //      groundMaterial = new CANNON.Material();
+           //      var groundShape = new CANNON.Plane();
+           //      var groundBody = new CANNON.Body( { mass: 0, material: groundMaterial } );
+           //      groundBody.addShape( groundShape );
+           //      world.addBody( groundBody );
+           //      demo.addVisual( groundBody );
+
+           //      var stone = new CANNON.Material('stone');
+           //      var stone_stone = new CANNON.ContactMaterial(stone, stone, {
+           //        friction: 0.3,
+           //        restitution: 0.2
+           //      });
+           //      world.addContactMaterial(stone_stone);
+
+           //      // plane -x
+           //      var planeShapeXmin = new CANNON.Plane();
+           //      var planeXmin = new CANNON.Body({ mass: 0, material: stone });
+           //      planeXmin.addShape(planeShapeXmin);
+           //      planeXmin.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),Math.PI/2);
+           //      planeXmin.position.set(-10,0,0);
+           //      world.addBody(planeXmin);
+           //     // demo.addVisual(planeXmin);
+
+           //      // Plane +x
+           //      var planeShapeXmax = new CANNON.Plane();
+           //      var planeXmax = new CANNON.Body({ mass: 0, material: stone });
+           //      planeXmax.addShape(planeShapeXmax);
+           //      planeXmax.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),-Math.PI/2);
+           //      planeXmax.position.set(10,0,0);
+           //      world.addBody(planeXmax);
+           //     // demo.addVisual(planeXmax);
+
+           //      // Plane -y
+           //      var planeShapeYmin = new CANNON.Plane();
+           //      var planeYmin = new CANNON.Body({ mass: 0, material: stone });
+           //      planeYmin.addShape(planeShapeYmin);
+           //      planeYmin.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+           //      planeYmin.position.set(0,-10,0);
+           //      world.addBody(planeYmin);
+           //      demo.addVisual(planeYmin);
+
+           //      // Plane +y
+           //      var planeShapeYmin = new CANNON.Plane();
+           //      var planeYmin = new CANNON.Body({ mass: 0,  material: stone });
+           //      planeYmin.addShape(planeShapeYmin);
+           //      planeYmin.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI/2);
+           //      planeYmin.position.set(0,10,0);
+           //      world.addBody(planeYmin);
+           //     // demo.addVisual(planeYmin);
+
+           //      // Plane +z
+           //      var planeShapeZmax = new CANNON.Plane();
+           //      var planeZmax = new CANNON.Body({ mass: 0, material: stone });
+           //      planeZmax.addShape(planeShapeZmax);
+           //      planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI);
+           //      planeZmax.position.set(0,0,20);
+           //      world.addBody(planeZmax);
+           //      //demo.addVisual(planeZmax);
+
+           //      // Shape on plane
+           //      sphereShape = new CANNON.Sphere( size );
+           //      ballMaterial = new CANNON.Material();
+           //      var shapeBody1 = new CANNON.Body( {
+           //          mass: mass,
+           //          material: ballMaterial,
+           //          position: new CANNON.Vec3( 3 * size, size, height )
+           //      });
+           //      shapeBody1.addShape( sphereShape );
+           //      shapeBody1.linearDampling = dampling;
+           //      world.addBody( shapeBody1 );
+           //      demo.addVisual( shapeBody1 );
+
+           //      var shapeBody2 = new CANNON.Body( {
+           //          mass: mass,
+           //          material: ballMaterial,
+           //          position: new CANNON.Vec3( 0 * size, size, height )
+           //      });
+           //      shapeBody2.addShape( sphereShape );
+           //      shapeBody2.linearDampling = dampling;
+           //      world.addBody( shapeBody2 );
+           //      demo.addVisual( shapeBody2 );
+
+           //      var shapeBody3 = new CANNON.Body( {
+           //          mass: mass,
+           //          material: ballMaterial,
+           //          position: new CANNON.Vec3( -3 * size, size, height )
+           //      });
+           //      shapeBody3.addShape( sphereShape );
+           //      shapeBody3.linearDampling = dampling;
+           //      world.addBody( shapeBody3 );
+           //      demo.addVisual( shapeBody3 );
+
+           //      generateBalls();
+           //      // Create contact material behaviour
+           //      var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
+
+           //      world.addContactMaterial( ballGroundContact );
+           //  });
+
+            // camera = demo.getCamera();
+            // camera.position.y += 60;
+            // camera.position.z += 60;
+            //demo.settings.shadows = true;
+            //demo.start();
+
+            function generateBalls() {
+
+              var counts = 400;
+
+              for ( var i = 0; i < counts; ++i ) {
+
+                var ballBody = new CANNON.Body( {
+                    mass: mass,
+                    material: ballMaterial,
+                    position: new CANNON.Vec3( (Math.random() - 0.5) * 20, (Math.random() - 0.5) *size, Math.random() * 20 )
+                });
+                ballBody.addShape( sphereShape );
+                ballBody.linearDampling = dampling;
+                world.addBody( ballBody );
+               // demo.addVisual( ballBody );
+              }
+            }
+
+            function shootBall() {
+
+                var shootVelo = 15;
+                var ballHeight = 10;
+                var shootDirection = new THREE.Vector3();
+                var sphereShape = new CANNON.Sphere( size );
+
+                var projector = new THREE.Projector();
+                shootDirection.set( 0,0,1 );
+                camera = demo.getCamera();
+                var mat = new CANNON.Material();
+                projector.unprojectVector(shootDirection, camera);
+                var sphereBody = new CANNON.Body( {
+                    mass: mass,
+                    material: mat,
+                    position: new CANNON.Vec3( 3 * size, size, ballHeight )
+                });
+                var mat_mat = new CANNON.ContactMaterial(mat, mat, {
+                  friction: 0.3,
+                  restitution: 5
+                });
+                var mat_ground = new CANNON.ContactMaterial(groundMaterial, mat, { friction: 0.0, restitution: 5 });
+                demo.world.addContactMaterial(mat_ground);
+
+                var ray = new THREE.Ray(camera.position, shootDirection.sub(camera.position).normalize() );
+                shootDirection.x = ray.direction.x;
+                shootDirection.y = ray.direction.y;
+                shootDirection.z = ray.direction.z;
+
+                sphereBody.velocity.set( shootDirection.x * shootVelo,
+                                        shootDirection.y * shootVelo,
+                                        shootDirection.z * shootVelo);
+
+                var x = camera.position.x;
+                var y = camera.position.y;
+                var z = camera.position.z;
+
+                // Move the ball outside the player sphere
+                x += shootDirection.x * ( sphereShape.radius );
+                y += shootDirection.y * ( sphereShape.radius );
+                z += shootDirection.z * ( sphereShape.radius );
+                sphereBody.position.set(x,y,z);
+
+                sphereBody.addShape( sphereShape );
+                sphereBody.linearDampling = dampling;
+                demo.world.addBody( sphereBody );
+                demo.addVisual( sphereBody );
+            }
+
+            window.addEventListener("click",function(e){
+
+               // shootBall();
+            });
+            
+        </script>
+    </body>
+</html>

@@ -71,7 +71,7 @@ date: 08/07/2015
 
                 if ( window.Worker ) { 
 
-                    var worker = new Worker("js/gl_worker.js");
+                    var worker = new Worker("js/gl_worker_maximus.js");
                     
                     worker.onmessage = function( evt ) {
                         console.log('Message received from worker ' + evt.data );
