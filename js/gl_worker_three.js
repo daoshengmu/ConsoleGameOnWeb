@@ -1,20 +1,12 @@
 
-// var rotateAngle = 0;
-
-// var RendererModule = function() {
-//     this.renderer = null;
-//     this.worldMtx = null;
-//     this.controls = null;
-// }
-
-// var rendererModule = null;
+// Canno.js is Z-UP
 
 var camera = null;
-//var controls = null;
+var controls = null;
 var renderer = null;
 var scene = null;
 var bInit = false;
-// var _gl;
+var meshes = [];
 
 onmessage = function(evt) {
 
@@ -31,7 +23,7 @@ onmessage = function(evt) {
         importScripts("../lib/cannon.min.js");
         // importScripts("lib/cannon.demo.js");
 //        importScripts("../lib/dat.gui.min.js");
-        //importScripts("../lib/threejs/TrackballControls.js");
+        importScripts("../lib/threejs/TrackballControls.js");
 //        importScripts("../lib/Detector.js");
         // importScripts("../lib/Stats.js");
         // importScripts("../lib/smoothie.js");
@@ -58,21 +50,22 @@ onmessage = function(evt) {
 
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
-        camera.up.set( 0, 0, 1 );
-        camera.position.set( 0, 90, 580 );
+        //camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+        camera.target = new THREE.Vector3(0, 0, 0);
+        //camera.up.set( 0, 0, 1 );
+        camera.position.set( 0, 10, 50 );
 
-        // // Controls
-        // // controls = new THREE.TrackballControls( camera );
-        // // controls.rotateSpeed = 1.0;
-        // // controls.zoomSpeed = 1.2;
-        // // controls.panSpeed = 0.8;
-        // // controls.noZoom = false;
-        // // controls.noPan = false;
-        // // controls.staticMoving = true;
-        // // controls.dynamicDampingFactor = 0.3;
-        // // controls.keys = [ 65, 83, 68 ];
+        controls = new THREE.TrackballControls( camera, canvas );
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+        //controls.keys = [ 65, 83, 68 ];
         
-        // console.log( 'control object import script... ' );
+        console.log( 'control object import script... ' );
 
         // // if ( !controls )
         // //     console.log( 'null controls' );
@@ -119,64 +112,67 @@ onmessage = function(evt) {
         
         var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
         mesh = new THREE.Object3D();
-        var submesh = new THREE.Object3D();
+        //var submesh = new THREE.Object3D();
         var ground = new THREE.Mesh( geometry, solidMaterial );
-        ground.scale.set(100, 100, 100);
-        submesh.add(ground);
+        ground.scale.set(1, 1, 1);
+      //  submesh.add(ground);
 
         // ground.castShadow = true;
         // ground.receiveShadow = true;
-        mesh.add(submesh);
+        mesh.add(ground);
+        mesh.position.set(0, 0, 0);
+        mesh.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+        //mesh.rotation.y = 0.3;
 
         scene.add( mesh );
 
-        // plane -x
-        var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
-        mesh = new THREE.Object3D();
-        var submesh = new THREE.Object3D();
-        var ground = new THREE.Mesh( geometry, solidMaterial );
-        ground.scale.set(100, 100, 100);
-        submesh.add(ground);
+       //  //plane -x
+       //  var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+       //  var mesh = new THREE.Object3D();
+       //  //var submesh = new THREE.Object3D();
+       //  var ground = new THREE.Mesh( geometry, solidMaterial );
+       //  ground.scale.set(10, 10, 10);
+       //  //submesh.add(ground);
+
+       //  // ground.castShadow = true;
+       //  // ground.receiveShadow = true;
+       //  mesh.add( ground );
+       //  mesh.quaternion.setFromAxisAngle( new CANNON.Vec3(0,1,0),Math.PI/2 );
+       //  mesh.position.set( -10, 0, 0 );
+
+       //  scene.add( mesh );
+
+       //  // plane +x
+       //  var geometry = new THREE.PlaneGeometry( 10, 10, 4, 4 );
+       //  mesh = new THREE.Object3D();
+       // // var submesh = new THREE.Object3D();
+       //  var ground = new THREE.Mesh( geometry, solidMaterial );
+       //  ground.scale.set(10, 10, 10);
+       // // submesh.add(ground);
+
+       //  // ground.castShadow = true;
+       //  // ground.receiveShadow = true;
+       //  mesh.add( ground );
+       //  mesh.quaternion.setFromAxisAngle( new CANNON.Vec3(0,1,0), -Math.PI/2 );
+       //  mesh.position.set( 10, 0, 0 );
+
+       //  scene.add( mesh );
+
+        // // plane -y
+        // var geometry = new THREE.PlaneGeometry( 10, 10, 4, 4 );
+        // mesh = new THREE.Object3D();
+        // var submesh = new THREE.Object3D();
+        // var ground = new THREE.Mesh( geometry, solidMaterial );
+        // ground.scale.set(100, 100, 100);
+        // submesh.add(ground);
 
         // ground.castShadow = true;
         // ground.receiveShadow = true;
-        mesh.add( submesh );
-        mesh.quaternion.setFromAxisAngle( new CANNON.Vec3(0,1,0),Math.PI/2 );
-        mesh.position.set( -10, 0, 0 );
+        // mesh.add( submesh );
+        // mesh.quaternion.setFromAxisAngle( new CANNON.Vec3(1,0,0),-Math.PI/2 );
+        // mesh.position.set( 0, -10, 0 );
 
-        scene.add( mesh );
-
-        // plane +x
-        var geometry = new THREE.PlaneGeometry( 10, 10, 4, 4 );
-        mesh = new THREE.Object3D();
-        var submesh = new THREE.Object3D();
-        var ground = new THREE.Mesh( geometry, solidMaterial );
-        ground.scale.set(100, 100, 100);
-        submesh.add(ground);
-
-        // ground.castShadow = true;
-        // ground.receiveShadow = true;
-        mesh.add( submesh );
-        mesh.quaternion.setFromAxisAngle( new CANNON.Vec3(0,1,0), -Math.PI/2 );
-        mesh.position.set( 10, 0, 0 );
-
-        scene.add( mesh );
-
-        // plane -y
-        var geometry = new THREE.PlaneGeometry( 10, 10, 4, 4 );
-        mesh = new THREE.Object3D();
-        var submesh = new THREE.Object3D();
-        var ground = new THREE.Mesh( geometry, solidMaterial );
-        ground.scale.set(100, 100, 100);
-        submesh.add(ground);
-
-        ground.castShadow = true;
-        ground.receiveShadow = true;
-        mesh.add( submesh );
-        mesh.quaternion.setFromAxisAngle( new CANNON.Vec3(1,0,0),-Math.PI/2 );
-        mesh.position.set( 0, -10, 0 );
-
-        scene.add( mesh );
+        // scene.add( mesh );
 
         // // plane +y
         // var geometry = new THREE.PlaneGeometry( 10, 10, 4, 4 );
@@ -200,15 +196,15 @@ onmessage = function(evt) {
         var submesh = new THREE.Object3D();
         var ground = new THREE.Mesh( geometry, solidMaterial );
         ground.scale.set(100, 100, 100);
-        submesh.add(ground);
+       // submesh.add(ground);
 
         // ground.castShadow = true;
         // ground.receiveShadow = true;
-        mesh.add( submesh );
+        mesh.add( ground );
         mesh.quaternion.setFromAxisAngle( new CANNON.Vec3(1,0,0),Math.PI/2 );
         mesh.position.set( 0, 0, 20 );
 
-        scene.add( mesh );
+       // scene.add( mesh );
 
         // Sphere
         var radius = 1;
@@ -235,10 +231,34 @@ onmessage = function(evt) {
 
         scene.add( mesh );
 
-        // generateBalls();
+        generateBalls();
 
+        window.addEventListener( 'resize', onWindowResize, false );
         bInit = true;
+
+        return;
     }
+
+    var positions = evt.data.positions;
+    var quaternions = evt.data.quaternions;
+
+    if ( !positions || !quaternions )
+        return;
+
+    for ( var i = 0; i < meshes.length; i++ ) {
+        meshes[i].position.set( positions[3 * i + 0],
+                                positions[3 * i + 1],
+                                positions[3 * i + 2] );
+
+        // console.log("Worker thread Positions are " + positions[3 * i + 0] +
+        //             ", " + positions[3 * i + 1] + ", " + positions[3 * i + 2] );
+        meshes[i].quaternion.set( quaternions[4 * i + 0],
+                                quaternions[4 * i + 1],
+                                quaternions[4 * i + 2],
+                                quaternions[4 * i + 3] );
+    }
+
+
 
  //    // Get position data from the physics world.
 
@@ -306,26 +326,40 @@ onmessage = function(evt) {
  //    renderer.gammaOutput = true;
  //    renderer.shadowMapEnabled = true;
 
-    window.addEventListener( 'resize', onWindowResize, false );
-
+    workerAnimation();
 	postMessage( "Send script to main script" );
 }
 
-setInterval( workerAnimation, 16 );
+function generateBalls() {
+
+    var counts = 400;
+    var materialColor = 0xdddddd;
+    var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
+    var radius = 1;
+    var size = radius;
+
+    for ( var i = 0; i < counts; ++i ) {
+
+        var sphere_geometry = new THREE.SphereGeometry( radius, 8, 8 );
+        mesh = new THREE.Mesh( sphere_geometry, solidMaterial );
+        mesh.position.set( (Math.random() - 0.5) * 20, (Math.random() - 0.5) * size, Math.random() * 20 );
+
+        meshes.push( mesh );
+        scene.add( mesh );
+    }
+}
+
+//setInterval( workerAnimation, 16 );
 
 function workerAnimation() {
 	// postMessage("Calling back at : " + new Date().getTime());
-
+    controls.update();
 	render();	
 }
 
 function render() {
-	//rendererModule.controls.update();
-    // _gl.viewport( 0, 0, _gl.viewportWidth, _gl.viewportHeight );
-    // _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
 	renderer.render( scene, camera );	
     renderer.context.commit();
-    //_gl.commit();
 }
 
 function onWindowResize() {
