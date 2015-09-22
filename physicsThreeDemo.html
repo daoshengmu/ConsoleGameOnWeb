@@ -1,0 +1,331 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Ellis's physics three.js demo</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	</head>
+	<body>
+	<canvas id="c" width="640" height="640"></canvas>
+	<style type="text/css">
+		* {
+			margin:0;
+			padding:0;
+		}
+		body {
+			overflow: hidden;
+			font-family: Monospace;
+		}
+	</style>
+		<script src="lib/cannon.js"></script>
+		<script src="lib/three.js"></script>
+		<script type="text/javascript">
+			var scene;
+			var camera;
+		   	var renderer;
+			var size = 1;
+			var height = 5;
+			var dampling = 0.01;
+			var mass = 10;
+		    var sphereShape;
+		    var ballMaterial;
+			var world;
+			var N = 600;
+
+		    var visuals = [];
+		    var bodies = [];
+
+			var startTime = window.performance.now();
+
+			init();
+			animate();
+
+			function init() {
+
+			   	var canvas = document.getElementById('c');
+				canvas.width = window.innerWidth;
+				canvas.height = window.innerHeight;
+				renderer = new THREE.WebGLRenderer( { canvas: canvas } );
+				renderer.setClearColor( 0x000000, 1.0 );
+				renderer.autoClear = false;
+				renderer.shadowMapEnabled = true;
+			    renderer.shadowMapSoft = true;
+				scene = new THREE.Scene();
+        		camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
+        		camera.target = new THREE.Vector3(0, 0, 0);
+        		camera.position.set( 0, 10, 150 );
+
+				world = new CANNON.World();
+				world.broadphase = new CANNON.NaiveBroadphase();
+				world.gravity.set(0,-10,0);
+				world.solver.tolerance = 0.001;
+
+				var light, materials;
+		        scene.add( new THREE.AmbientLight( 0x222222 ) );
+
+		        light = new THREE.DirectionalLight( 0xffffff, 0.8 );
+		        var d = 20;
+
+		        light.position.set( d, d, d );
+		        light.castShadow = true;
+		        //light.shadowCameraVisible = true;
+		        light.shadowCameraLeft = -d;
+		        light.shadowCameraRight = d;
+		        light.shadowCameraTop = d;
+		        light.shadowCameraBottom = -d;
+		        light.shadowCameraFar = 3*d;
+		        light.shadowCameraNear = d;
+		        light.shadowDarkness = 0.5;
+
+		        var SHADOW_MAP_WIDTH = 512;
+		        var SHADOW_MAP_HEIGHT = 512;
+
+		        light.shadowMapBias = 0.0039;
+		        light.shadowMapDarkness = 0.5;
+		        light.shadowMapWidth = SHADOW_MAP_WIDTH;
+		        light.shadowMapHeight = SHADOW_MAP_HEIGHT;
+
+		        scene.add( light );
+
+		        var materialColor = 0xdddddd;
+        		var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
+        
+        		// Cannon physics material
+        		var stone = new CANNON.Material('stone');
+				var stone_stone = new CANNON.ContactMaterial(stone, stone, {
+				  friction: 0.3,
+				  restitution: 0.2
+				});
+				world.addContactMaterial(stone_stone);
+
+				// ground plane
+				groundMaterial = new CANNON.Material();
+				var groundShape = new CANNON.Plane();
+				var groundBody = new CANNON.Body( { mass: 0, material: groundMaterial } );
+				groundBody.addShape( groundShape );
+				groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
+				groundBody.position.set(0,-20,0);
+				world.addBody( groundBody );
+				
+				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+		        var ground = new THREE.Mesh( geometry, solidMaterial );
+		        ground.scale.set(10, 10, 10);
+        		ground.position.set(0, -20, 0);
+        		ground.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2);
+        		ground.castShadow = true;
+		        ground.receiveShadow = true;
+        		scene.add( ground );
+
+				// plane -x
+				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+		        var mesh = new THREE.Object3D();
+		        var ground = new THREE.Mesh( geometry, solidMaterial );
+		        ground.scale.set(10, 10, 10);
+		        ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), Math.PI/2 );
+		        ground.position.set( -30, 0, 0 );
+		        scene.add( ground );
+
+				var planeShapeXmin = new CANNON.Plane();
+				var planeXmin = new CANNON.Body({ mass: 0, material: stone });
+				planeXmin.addShape(planeShapeXmin);
+				planeXmin.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), Math.PI/2);
+				planeXmin.position.set(-30,0,0);
+				world.addBody(planeXmin);
+
+				// Plane +x
+				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+		        var ground = new THREE.Mesh( geometry, solidMaterial );
+		        ground.scale.set(10, 10, 10);
+        		ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), -Math.PI/2 );
+        		ground.position.set( 30, 0, 0 );
+        		ground.castShadow = true;
+		        ground.receiveShadow = true;
+        		scene.add( ground );
+
+				var planeShapeXmax = new CANNON.Plane();
+				var planeXmax = new CANNON.Body({ mass: 0, material: stone });
+				planeXmax.addShape(planeShapeXmax);
+				planeXmax.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),-Math.PI/2);
+				planeXmax.position.set(30,0,0);
+				world.addBody(planeXmax);
+
+				// Plane +y
+				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+		        var ground = new THREE.Mesh( geometry, solidMaterial );
+		        ground.scale.set(10, 10, 10);
+        		ground.quaternion.setFromAxisAngle( new THREE.Vector3(1,0,0), Math.PI/2 );
+		        ground.position.set( 0, 40, 0 );
+		        ground.castShadow = true;
+		        ground.receiveShadow = true;
+        		scene.add( ground );
+
+				var planeShapeYmax = new CANNON.Plane();
+				var planeYmax = new CANNON.Body({ mass: 0,  material: stone });
+				planeYmax.addShape(planeShapeYmax);
+				planeYmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI/2);
+				planeYmax.position.set(0,40,0);
+				world.addBody(planeYmax);
+
+				// Plane -z
+				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+		        var ground = new THREE.Mesh( geometry, solidMaterial );
+		        ground.scale.set(10, 10, 10);
+        		ground.position.set( 0, 0, -20 );
+        		ground.castShadow = true;
+		        ground.receiveShadow = true;
+        		scene.add( ground );
+
+				var planeShapeZmin = new CANNON.Plane();
+				var planeZmin = new CANNON.Body({ mass: 0, material: stone });
+				planeZmin.addShape(planeShapeZmin);
+				planeZmin.position.set(0,0,-20);
+				world.addBody(planeZmin);
+
+				// Plane +z
+				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+		        var ground = new THREE.Mesh( geometry, solidMaterial );
+		        ground.scale.set(10, 10, 10);
+        		ground.position.set(0, 0, 20);
+        		ground.castShadow = true;
+		        ground.receiveShadow = true;
+
+				var planeShapeZmax = new CANNON.Plane();
+				var planeZmax = new CANNON.Body({ mass: 0, material: stone });
+				planeZmax.addShape(planeShapeZmax);
+				planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI);
+				planeZmax.position.set(0,0,20);
+				world.addBody(planeZmax);
+
+				var radius = 1;
+		        var size = radius;
+		        var height = 5;
+
+				sphereShape = new CANNON.Sphere( size );
+				ballMaterial = new CANNON.Material();
+
+				generateBalls();
+				// Create contact material behaviour
+				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
+
+				world.addContactMaterial( ballGroundContact );
+			}
+
+			function animate( timestamp ) {
+
+				if ( !timestamp ) {
+					timestamp = startTime;
+				}
+
+				var diffTime = timestamp - startTime;
+				startTime = timestamp;
+				var dt = 1/60;
+
+				world.step( dt ); // Update the phyics world.
+				updateVisuals();
+				renderer.render( scene, camera );	
+				requestAnimationFrame( animate );
+			}
+		   
+		   	function updateVisuals() {
+		   		var lens = bodies.length;
+
+		        // Read position data into visuals
+		        for(var i=0; i<lens; i++){
+		            var b = bodies[i], visual = visuals[i];
+		            visual.position.copy(b.position);
+		            if(b.quaternion){
+		                visual.quaternion.copy(b.quaternion);
+		            }
+		        }
+		   	}
+
+			function generateBalls() {
+
+				var materialColor = 0xdddddd;
+				var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
+				var radius = 1;
+				var size = radius;
+
+			  	for ( var i = 0; i < N; ++i ) {
+
+			  		var sphere_geometry = new THREE.SphereGeometry( radius, 8, 8 );
+			        mesh = new THREE.Mesh( sphere_geometry, solidMaterial );
+			        mesh.position.set( (Math.random() - 0.5) * 20, (Math.random() - 0.5) * size, Math.random() * 20 );
+			        mesh.castShadow = true;
+		        	mesh.receiveShadow = true;
+
+			        scene.add( mesh );
+			        visuals.push( mesh );
+
+					var ballBody = new CANNON.Body( {
+						mass: mass,
+						material: ballMaterial,
+						position: new CANNON.Vec3( (Math.random() - 0.5) * 20, (Math.random() - 0.5) *size, Math.random() * 20 )
+					});
+				
+					ballBody.addShape( sphereShape );
+					ballBody.linearDampling = dampling;
+					world.addBody( ballBody );
+					bodies.push( ballBody );
+			  	}
+			}
+
+			function shootBall() {
+
+				var shootVelo = 15;
+				var ballHeight = 10;
+				var shootDirection = new THREE.Vector3();
+				var projector = new THREE.Projector();
+
+				shootDirection.set( 0,0,1 );
+				camera = demo.getCamera();
+				var mat = new CANNON.Material();
+				projector.unprojectVector(shootDirection, camera);
+				var sphereBody = new CANNON.Body( {
+					mass: mass,
+					material: mat,
+					position: new CANNON.Vec3( 3 * size, size, ballHeight )
+				});
+				var mat_mat = new CANNON.ContactMaterial(mat, mat, {
+				  friction: 0.3,
+				  restitution: 5
+				});
+				var mat_ground = new CANNON.ContactMaterial(groundMaterial, mat, { friction: 0.0, restitution: 5 });
+				demo.world.addContactMaterial(mat_ground);
+
+				var ray = new THREE.Ray(camera.position, shootDirection.sub(camera.position).normalize() );
+				shootDirection.x = ray.direction.x;
+				shootDirection.y = ray.direction.y;
+				shootDirection.z = ray.direction.z;
+
+				sphereBody.velocity.set( shootDirection.x * shootVelo,
+										shootDirection.y * shootVelo,
+										shootDirection.z * shootVelo);
+
+				var x = camera.position.x;
+				var y = camera.position.y;
+				var z = camera.position.z;
+
+				// Move the ball outside the player sphere
+				x += shootDirection.x * ( sphereShape.radius );
+				y += shootDirection.y * ( sphereShape.radius );
+				z += shootDirection.z * ( sphereShape.radius );
+				sphereBody.position.set(x,y,z);
+
+				sphereBody.addShape( sphereShape );
+				sphereBody.linearDampling = dampling;
+				demo.world.addBody( sphereBody );
+				demo.addVisual( sphereBody );
+			}
+
+			window.addEventListener("click",function(e){
+			   // shootBall();
+			});
+			
+		</script>
+	</body>
+</html>
