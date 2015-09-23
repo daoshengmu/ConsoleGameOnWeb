@@ -27,11 +27,11 @@ and open the template in the editor.
 			var height = 5;
 			var dampling = 0.01;
 			var mass = 10;
-		    var sphereShape;
+			var sphereShape;
 			var ballMaterial;
 			var bodies = [];
 			var world;
-			var N = 600;
+			var N = 1000;
 
 			init();
 			animate();
@@ -117,10 +117,10 @@ and open the template in the editor.
 				initWorker();
 			}
 
-        	var worker;
+			var worker;
 
 			function initWorker() {
-			   	var canvas = document.getElementById('c');
+				var canvas = document.getElementById('c');
 				canvas.width = window.innerWidth;
 				canvas.height = window.innerHeight;
 				var proxy = canvas.transferControlToOffscreen();   // new interface added by offscreencanvas.
@@ -138,10 +138,9 @@ and open the template in the editor.
 			}
 
 			function updateWorker() {
-
 				var positions = new Float32Array(N*3);	// It have to be new in loops. Why?
-        		var quaternions = new Float32Array(N*4); // It have to be new in loops. Why?
-        		var lens = bodies.length;
+				var quaternions = new Float32Array(N*4); // It have to be new in loops. Why?
+				var lens = bodies.length;
 
 				for ( var i = 0; i < lens; ++i ) {
 					var b = bodies[i];
