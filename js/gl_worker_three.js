@@ -6,7 +6,7 @@ var renderer = null;
 var scene = null;
 var bInit = false;
 var visuals = [];
-var N = 600;
+var N = 1000;
 
 onmessage = function(evt) {
 	var window = self;
