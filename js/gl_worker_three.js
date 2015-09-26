@@ -63,7 +63,7 @@ onmessage = function(evt) {
         light.shadowMapWidth = SHADOW_MAP_WIDTH;
         light.shadowMapHeight = SHADOW_MAP_HEIGHT;
 
-        scene.add( light );
+        scene.add(light);
 
         // Add meshes
         var materialColor = 0xdddddd;
@@ -85,15 +85,15 @@ onmessage = function(evt) {
         var ground = new THREE.Mesh( geometry, solidMaterial );
         ground.scale.set(10, 10, 10);
         ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), Math.PI/2 );
-        ground.position.set( -30, 0, 0 );
-        scene.add( ground );
+        ground.position.set(-30, 0, 0);
+        scene.add(ground);
 
         // plane +x
         var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
         var ground = new THREE.Mesh( geometry, solidMaterial );
         ground.scale.set(10, 10, 10);
         ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), -Math.PI/2 );
-        ground.position.set( 30, 0, 0 );
+        ground.position.set(30, 0, 0);
         ground.castShadow = true;
         ground.receiveShadow = true;
         scene.add( ground );
@@ -112,7 +112,7 @@ onmessage = function(evt) {
         var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
         var ground = new THREE.Mesh( geometry, solidMaterial );
         ground.scale.set(10, 10, 10);
-        ground.position.set( 0, 0, -20 );
+        ground.position.set(0, 0, -20);
         ground.castShadow = true;
         ground.receiveShadow = true;
         scene.add( ground );
@@ -125,16 +125,32 @@ onmessage = function(evt) {
         generateBalls();
 
         window.addEventListener( 'resize', onWindowResize, false );
+        
+        // Send camera to main thread
+        postMessage( "Send script to main script" );
         bInit = true;
 
         return;
     }
 
+    // Get bufffers that are sent from main thread.
+    var cameraPos = evt.data.cameraPos;
+    var cameraQuatern = evt.data.cameraQuatern;
     var positions = evt.data.positions;
     var quaternions = evt.data.quaternions;
 
-    if ( !positions || !quaternions )
+    if ( !cameraPos || !cameraQuatern 
+        || !positions || !quaternions )
         return;
+
+    console.log("set camera from main thread...");
+    console.log("camera position is " + cameraPos[0] + ", " + cameraPos[1] 
+        + ", " + cameraPos[2]);
+    console.log("camera quatorn is " + cameraQuatern[0] + ", " + cameraQuatern[1] 
+        + ", " + cameraQuatern[2] + ", " + cameraQuatern[3]);
+    camera.position.set( cameraPos[0], cameraPos[1], cameraPos[2] );
+    camera.quaternion.set( cameraQuatern[0], cameraQuatern[1], cameraQuatern[2], cameraQuatern[3] );
+
 
     for ( var i = 0; i < visuals.length; i++ ) {
         visuals[i].position.set( positions[3 * i + 0],

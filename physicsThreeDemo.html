@@ -23,6 +23,7 @@ and open the template in the editor.
 	</style>
 		<script src="lib/cannon.js"></script>
 		<script src="lib/three.js"></script>
+		<script src="lib/threejs/TrackballControls.js"></script>
 		<script type="text/javascript">
 			var scene;
 			var camera;
@@ -35,6 +36,7 @@ and open the template in the editor.
 			var ballMaterial;
 			var world;
 			var N = 1000;
+			var controls;
 
 			var visuals = [];
 			var bodies = [];
@@ -58,6 +60,16 @@ and open the template in the editor.
 				camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
 				camera.target = new THREE.Vector3(0, 0, 0);
 				camera.position.set( 0, 10, 150 );
+
+				// Controls
+	            controls = new THREE.TrackballControls( camera );
+	            controls.rotateSpeed = 1.0;
+	            controls.zoomSpeed = 1.2;
+	            controls.panSpeed = 0.8;
+	            controls.noZoom = false;
+	            controls.noPan = false;
+	            controls.staticMoving = true;
+	            controls.dynamicDampingFactor = 0.3;
 
 				world = new CANNON.World();
 				world.broadphase = new CANNON.NaiveBroadphase();
@@ -226,7 +238,11 @@ and open the template in the editor.
 
 				world.step( dt ); // Update the phyics world.
 				updateVisuals();
-				renderer.render( scene, camera );	
+				controls.update();
+
+				console.log("camera quatorn is " + camera.quaternion.x + ", " + camera.quaternion.y
+        + ", " + camera.quaternion.z + ", " + camera.quaternion.w );
+				renderer.render( scene, camera );
 				requestAnimationFrame( animate );
 			}
 		   

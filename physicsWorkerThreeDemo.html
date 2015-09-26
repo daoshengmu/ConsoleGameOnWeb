@@ -22,6 +22,8 @@ and open the template in the editor.
 		}
 	</style>
 		<script src="lib/cannon.js"></script>
+		<script src="lib/three.js"></script>
+		<script src="lib/threejs/TrackballControls.js"></script>
 		<script type="text/javascript">
 			var size = 1;
 			var height = 5;
@@ -32,6 +34,8 @@ and open the template in the editor.
 			var bodies = [];
 			var world;
 			var N = 1000;
+			var controls;
+			var controlObj;
 
 			init();
 			animate();
@@ -109,6 +113,20 @@ and open the template in the editor.
 				sphereShape = new CANNON.Sphere( size );
 				ballMaterial = new CANNON.Material();
 
+				// Init camera controller
+				// Controls
+				controlObj = new THREE.Object3D();
+				controlObj.target = new THREE.Vector3(0, 0, 0);
+				controlObj.position.set( 0, 10, 150 );
+				controls = new THREE.TrackballControls( controlObj );
+				controls.rotateSpeed = 1.0;
+				controls.zoomSpeed = 1.2;
+				controls.panSpeed = 0.8;
+				controls.noZoom = false;
+				controls.noPan = false;
+				controls.staticMoving = true;
+				controls.dynamicDampingFactor = 0.3;
+
 				generateBalls();
 				// Create contact material behaviour
 				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
@@ -128,7 +146,6 @@ and open the template in the editor.
 				if ( window.Worker ) { 
 
 					worker = new Worker("js/gl_worker_three.js");
-					
 					worker.onmessage = function( evt ) {
 						console.log('Message received from worker ' + evt.data );
 					};
@@ -138,8 +155,20 @@ and open the template in the editor.
 			}
 
 			function updateWorker() {
-				var positions = new Float32Array(N*3);	// It have to be new in loops. Why?
-				var quaternions = new Float32Array(N*4); // It have to be new in loops. Why?
+				// It have to be new in loops. Why?
+				var positions = new Float32Array(N*3);	
+				var quaternions = new Float32Array(N*4);
+				var cameraPos = new Float32Array(3);
+				var cameraQuatern = new Float32Array(4);
+
+				cameraPos[0] = controlObj.position.x;
+				cameraPos[1] = controlObj.position.y;
+				cameraPos[2] = controlObj.position.z;
+				cameraQuatern[0] = controlObj.quaternion.z;
+				cameraQuatern[1] = controlObj.quaternion.x;
+				cameraQuatern[2] = controlObj.quaternion.w;
+				cameraQuatern[3] = controlObj.quaternion.y;
+
 				var lens = bodies.length;
 
 				for ( var i = 0; i < lens; ++i ) {
@@ -157,12 +186,17 @@ and open the template in the editor.
 					quaternions[4 * i + 3] = q.w; 
 				}
 
-				worker.postMessage( { positions: positions, quaternions: quaternions }, [positions.buffer, quaternions.buffer]);
+				worker.postMessage( { cameraPos: cameraPos, cameraQuatern: cameraQuatern, positions: positions, quaternions: quaternions }, [cameraPos.buffer, cameraQuatern.buffer, positions.buffer, quaternions.buffer]);
 			}
 
 			function animate( timestamp ) {
 				var dt = 1/60;
 
+				controls.update();
+
+				console.log("controlObj quatorn is " + controlObj.quaternion.x + ", " + controlObj.quaternion.y
+        + ", " + controlObj.quaternion.z + ", " + controlObj.quaternion.w );
+				
 				world.step( dt ); // Update the phyics world.
 				updateWorker();
 				requestAnimationFrame( animate );
