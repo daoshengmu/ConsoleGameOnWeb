@@ -59,17 +59,17 @@ and open the template in the editor.
 				scene = new THREE.Scene();
 				camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
 				camera.target = new THREE.Vector3(0, 0, 0);
-				camera.position.set( 0, 10, 150 );
+				camera.position.set(0, 30, 170);
 
 				// Controls
-	            controls = new THREE.TrackballControls( camera );
-	            controls.rotateSpeed = 1.0;
-	            controls.zoomSpeed = 1.2;
-	            controls.panSpeed = 0.8;
-	            controls.noZoom = false;
-	            controls.noPan = false;
-	            controls.staticMoving = true;
-	            controls.dynamicDampingFactor = 0.3;
+				controls = new THREE.TrackballControls(camera);
+				controls.rotateSpeed = 1.0;
+				controls.zoomSpeed = 1.2;
+				controls.panSpeed = 0.8;
+				controls.noZoom = false;
+				controls.noPan = false;
+				controls.staticMoving = true;
+				controls.dynamicDampingFactor = 0.3;
 
 				world = new CANNON.World();
 				world.broadphase = new CANNON.NaiveBroadphase();
@@ -103,7 +103,7 @@ and open the template in the editor.
 
 				scene.add( light );
 
-				var materialColor = 0xdddddd;
+				var materialColor = 0x55ff55;
 				var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
 		
 				// Cannon physics material
@@ -138,7 +138,7 @@ and open the template in the editor.
 				var ground = new THREE.Mesh( geometry, solidMaterial );
 				ground.scale.set(10, 10, 10);
 				ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), Math.PI/2 );
-				ground.position.set( -30, 0, 0 );
+				ground.position.set(-30, 0, 0);
 				scene.add( ground );
 
 				var planeShapeXmin = new CANNON.Plane();
@@ -153,7 +153,7 @@ and open the template in the editor.
 				var ground = new THREE.Mesh( geometry, solidMaterial );
 				ground.scale.set(10, 10, 10);
 				ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), -Math.PI/2 );
-				ground.position.set( 30, 0, 0 );
+				ground.position.set(30, 0, 0);
 				ground.castShadow = true;
 				ground.receiveShadow = true;
 				scene.add( ground );
@@ -170,7 +170,7 @@ and open the template in the editor.
 				var ground = new THREE.Mesh( geometry, solidMaterial );
 				ground.scale.set(10, 10, 10);
 				ground.quaternion.setFromAxisAngle( new THREE.Vector3(1,0,0), Math.PI/2 );
-				ground.position.set( 0, 40, 0 );
+				ground.position.set(0, 40, 0);
 				ground.castShadow = true;
 				ground.receiveShadow = true;
 				scene.add( ground );
@@ -186,7 +186,7 @@ and open the template in the editor.
 				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
 				var ground = new THREE.Mesh( geometry, solidMaterial );
 				ground.scale.set(10, 10, 10);
-				ground.position.set( 0, 0, -20 );
+				ground.position.set(0, 0, -20);
 				ground.castShadow = true;
 				ground.receiveShadow = true;
 				scene.add( ground );
@@ -240,8 +240,6 @@ and open the template in the editor.
 				updateVisuals();
 				controls.update();
 
-				console.log("camera quatorn is " + camera.quaternion.x + ", " + camera.quaternion.y
-        + ", " + camera.quaternion.z + ", " + camera.quaternion.w );
 				renderer.render( scene, camera );
 				requestAnimationFrame( animate );
 			}
@@ -268,7 +266,7 @@ and open the template in the editor.
 
 				for ( var i = 0; i < N; ++i ) {
 
-					var sphere_geometry = new THREE.SphereGeometry( radius, 8, 8 );
+					var sphere_geometry = new THREE.SphereGeometry(radius, 8, 8);
 					mesh = new THREE.Mesh( sphere_geometry, solidMaterial );
 					mesh.position.set( (Math.random() - 0.5) * 20, (Math.random() - 0.5) * size, Math.random() * 20 );
 					mesh.castShadow = true;
