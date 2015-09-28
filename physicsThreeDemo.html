@@ -220,6 +220,7 @@ and open the template in the editor.
 				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
 
 				world.addContactMaterial(ballGroundContact);
+				window.addEventListener( 'resize', onWindowResize, false );
 			}
 
 			function animate( timestamp ) {
@@ -324,6 +325,12 @@ and open the template in the editor.
 				sphereBody.linearDampling = dampling;
 				demo.world.addBody( sphereBody );
 				demo.addVisual( sphereBody );
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
 			}
 
 			window.addEventListener("click",function(e){
