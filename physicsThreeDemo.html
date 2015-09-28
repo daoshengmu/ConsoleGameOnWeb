@@ -29,7 +29,6 @@ and open the template in the editor.
 			var camera;
 			var renderer;
 			var size = 1;
-			var height = 5;
 			var dampling = 0.01;
 			var mass = 10;
 			var sphereShape;
@@ -37,11 +36,10 @@ and open the template in the editor.
 			var world;
 			var N = 1000;
 			var controls;
-
+			var dt = 1/60;
+			var bShowBoundary = false;
 			var visuals = [];
 			var bodies = [];
-
-			var startTime = window.performance.now();
 
 			init();
 			animate();
@@ -80,7 +78,7 @@ and open the template in the editor.
 				scene.add( new THREE.AmbientLight( 0x222222 ) );
 
 				light = new THREE.DirectionalLight( 0xffffff, 0.8 );
-				var d = 20;
+				var d = 50;
 
 				light.position.set( d, d, d );
 				light.castShadow = true;
@@ -118,10 +116,10 @@ and open the template in the editor.
 				groundMaterial = new CANNON.Material();
 				var groundShape = new CANNON.Plane();
 				var groundBody = new CANNON.Body( { mass: 0, material: groundMaterial } );
-				groundBody.addShape( groundShape );
-				groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
-				groundBody.position.set(0,-20,0);
-				world.addBody( groundBody );
+				groundBody.addShape(groundShape);
+				groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI/2);
+				groundBody.position.set(0, -20, 0);
+				world.addBody(groundBody);
 				
 				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
 				var ground = new THREE.Mesh( geometry, solidMaterial );
@@ -133,30 +131,34 @@ and open the template in the editor.
 				scene.add( ground );
 
 				// plane -x
-				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
-				var mesh = new THREE.Object3D();
-				var ground = new THREE.Mesh( geometry, solidMaterial );
-				ground.scale.set(10, 10, 10);
-				ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), Math.PI/2 );
-				ground.position.set(-30, 0, 0);
-				scene.add( ground );
-
+				if (bShowBoundary) {
+					var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+					var mesh = new THREE.Object3D();
+					var ground = new THREE.Mesh( geometry, solidMaterial );
+					ground.scale.set(10, 10, 10);
+					ground.quaternion.setFromAxisAngle( new THREE.Vector3(0, 1, 0), Math.PI/2 );
+					ground.position.set(-30, 0, 0);
+					scene.add( ground );	
+				}
+				
 				var planeShapeXmin = new CANNON.Plane();
 				var planeXmin = new CANNON.Body({ mass: 0, material: stone });
 				planeXmin.addShape(planeShapeXmin);
 				planeXmin.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), Math.PI/2);
-				planeXmin.position.set(-30,0,0);
+				planeXmin.position.set(-30, 0, 0);
 				world.addBody(planeXmin);
 
 				// Plane +x
-				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
-				var ground = new THREE.Mesh( geometry, solidMaterial );
-				ground.scale.set(10, 10, 10);
-				ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), -Math.PI/2 );
-				ground.position.set(30, 0, 0);
-				ground.castShadow = true;
-				ground.receiveShadow = true;
-				scene.add( ground );
+				if (bShowBoundary) {
+					var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+					var ground = new THREE.Mesh( geometry, solidMaterial );
+					ground.scale.set(10, 10, 10);
+					ground.quaternion.setFromAxisAngle( new THREE.Vector3(0,1,0), -Math.PI/2 );
+					ground.position.set(30, 0, 0);
+					ground.castShadow = true;
+					ground.receiveShadow = true;
+					scene.add( ground );
+				}
 
 				var planeShapeXmax = new CANNON.Plane();
 				var planeXmax = new CANNON.Body({ mass: 0, material: stone });
@@ -166,14 +168,16 @@ and open the template in the editor.
 				world.addBody(planeXmax);
 
 				// Plane +y
-				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
-				var ground = new THREE.Mesh( geometry, solidMaterial );
-				ground.scale.set(10, 10, 10);
-				ground.quaternion.setFromAxisAngle( new THREE.Vector3(1,0,0), Math.PI/2 );
-				ground.position.set(0, 40, 0);
-				ground.castShadow = true;
-				ground.receiveShadow = true;
-				scene.add( ground );
+				if (bShowBoundary) {
+					var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+					var ground = new THREE.Mesh( geometry, solidMaterial );
+					ground.scale.set(10, 10, 10);
+					ground.quaternion.setFromAxisAngle( new THREE.Vector3(1,0,0), Math.PI/2 );
+					ground.position.set(0, 40, 0);
+					ground.castShadow = true;
+					ground.receiveShadow = true;
+					scene.add( ground );
+				}				
 
 				var planeShapeYmax = new CANNON.Plane();
 				var planeYmax = new CANNON.Body({ mass: 0,  material: stone });
@@ -198,13 +202,6 @@ and open the template in the editor.
 				world.addBody(planeZmin);
 
 				// Plane +z
-				var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
-				var ground = new THREE.Mesh( geometry, solidMaterial );
-				ground.scale.set(10, 10, 10);
-				ground.position.set(0, 0, 20);
-				ground.castShadow = true;
-				ground.receiveShadow = true;
-
 				var planeShapeZmax = new CANNON.Plane();
 				var planeZmax = new CANNON.Body({ mass: 0, material: stone });
 				planeZmax.addShape(planeShapeZmax);
@@ -214,28 +211,18 @@ and open the template in the editor.
 
 				var radius = 1;
 				var size = radius;
-				var height = 5;
 
-				sphereShape = new CANNON.Sphere( size );
+				sphereShape = new CANNON.Sphere(size);
 				ballMaterial = new CANNON.Material();
 
 				generateBalls();
 				// Create contact material behaviour
 				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
 
-				world.addContactMaterial( ballGroundContact );
+				world.addContactMaterial(ballGroundContact);
 			}
 
 			function animate( timestamp ) {
-
-				if ( !timestamp ) {
-					timestamp = startTime;
-				}
-
-				var diffTime = timestamp - startTime;
-				startTime = timestamp;
-				var dt = 1/60;
-
 				world.step( dt ); // Update the phyics world.
 				updateVisuals();
 				controls.update();
@@ -266,9 +253,12 @@ and open the template in the editor.
 
 				for ( var i = 0; i < N; ++i ) {
 
+					var randX = (Math.random() - 0.5) * 20;
+					var randY = (Math.random() - 0.5) * size;
+					var randZ = Math.random() * 20;
 					var sphere_geometry = new THREE.SphereGeometry(radius, 8, 8);
-					mesh = new THREE.Mesh( sphere_geometry, solidMaterial );
-					mesh.position.set( (Math.random() - 0.5) * 20, (Math.random() - 0.5) * size, Math.random() * 20 );
+					mesh = new THREE.Mesh(sphere_geometry, solidMaterial);
+					mesh.position.set(randX, randY, randZ);
 					mesh.castShadow = true;
 					mesh.receiveShadow = true;
 
@@ -278,10 +268,10 @@ and open the template in the editor.
 					var ballBody = new CANNON.Body( {
 						mass: mass,
 						material: ballMaterial,
-						position: new CANNON.Vec3( (Math.random() - 0.5) * 20, (Math.random() - 0.5) *size, Math.random() * 20 )
+						position: new CANNON.Vec3(randX, randZ)
 					});
 				
-					ballBody.addShape( sphereShape );
+					ballBody.addShape(sphereShape);
 					ballBody.linearDampling = dampling;
 					world.addBody( ballBody );
 					bodies.push( ballBody );

@@ -26,7 +26,6 @@ and open the template in the editor.
 		<script src="lib/threejs/TrackballControls.js"></script>
 		<script type="text/javascript">
 			var size = 1;
-			var height = 5;
 			var dampling = 0.01;
 			var mass = 10;
 			var sphereShape;
@@ -35,6 +34,7 @@ and open the template in the editor.
 			var world;
 			var N = 1000;
 			var controls;
+			var bShowBoundary = false;
 			var camera;
 
 			init();
@@ -46,14 +46,7 @@ and open the template in the editor.
 				world.broadphase = new CANNON.NaiveBroadphase();
 				world.gravity.set(0,-10,0);
 				world.solver.tolerance = 0.001;
-
-				// ground plane
-				groundMaterial = new CANNON.Material();
-				var groundShape = new CANNON.Plane();
-				var groundBody = new CANNON.Body( { mass: 0, material: groundMaterial } );
-				groundBody.addShape( groundShape );
-				world.addBody( groundBody );
-
+				
 				var stone = new CANNON.Material('stone');
 				var stone_stone = new CANNON.ContactMaterial(stone, stone, {
 				  friction: 0.3,
@@ -65,52 +58,52 @@ and open the template in the editor.
 				groundMaterial = new CANNON.Material();
 				var groundShape = new CANNON.Plane();
 				var groundBody = new CANNON.Body( { mass: 0, material: groundMaterial } );
-				groundBody.addShape( groundShape );
-				groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
-				groundBody.position.set(0,-20,0);
-				world.addBody( groundBody );
+				groundBody.addShape(groundShape);
+				groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI/2);
+				groundBody.position.set(0, -20, 0);
+				world.addBody(groundBody);
 
 				// plane -x
 				var planeShapeXmin = new CANNON.Plane();
 				var planeXmin = new CANNON.Body({ mass: 0, material: stone });
 				planeXmin.addShape(planeShapeXmin);
-				planeXmin.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), Math.PI/2);
-				planeXmin.position.set(-30,0,0);
+				planeXmin.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI/2);
+				planeXmin.position.set(-30, 0, 0);
 				world.addBody(planeXmin);
 
 				// Plane +x
 				var planeShapeXmax = new CANNON.Plane();
 				var planeXmax = new CANNON.Body({ mass: 0, material: stone });
 				planeXmax.addShape(planeShapeXmax);
-				planeXmax.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),-Math.PI/2);
-				planeXmax.position.set(30,0,0);
+				planeXmax.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI/2);
+				planeXmax.position.set(30, 0, 0);
 				world.addBody(planeXmax);
 
 				// Plane +y
 				var planeShapeYmax = new CANNON.Plane();
 				var planeYmax = new CANNON.Body({ mass: 0,  material: stone });
 				planeYmax.addShape(planeShapeYmax);
-				planeYmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI/2);
-				planeYmax.position.set(0,40,0);
+				planeYmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI/2);
+				planeYmax.position.set(0, 40, 0);
 				world.addBody(planeYmax);
 				
 				// Plane -z
 				var planeShapeZmin = new CANNON.Plane();
 				var planeZmin = new CANNON.Body({ mass: 0, material: stone });
 				planeZmin.addShape(planeShapeZmin);
-				planeZmin.position.set(0,0,-20);
+				planeZmin.position.set(0, 0, -20);
 				world.addBody(planeZmin);
 
 				// Plane +z
 				var planeShapeZmax = new CANNON.Plane();
 				var planeZmax = new CANNON.Body({ mass: 0, material: stone });
 				planeZmax.addShape(planeShapeZmax);
-				planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI);
-				planeZmax.position.set(0,0,20);
+				planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0),-Math.PI);
+				planeZmax.position.set(0, 0, 20);
 				world.addBody(planeZmax);
 
 				// // Shape on plane
-				sphereShape = new CANNON.Sphere( size );
+				sphereShape = new CANNON.Sphere(size);
 				ballMaterial = new CANNON.Material();
 
 				// Init camera controller
@@ -131,7 +124,7 @@ and open the template in the editor.
 				// Create contact material behaviour
 				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
 
-				world.addContactMaterial( ballGroundContact );
+				world.addContactMaterial(ballGroundContact);
 				initWorker();
 			}
 
@@ -150,7 +143,7 @@ and open the template in the editor.
 						console.log('Message received from worker ' + evt.data );
 					};
 
-					worker.postMessage( { test: 'webgl_offscreen', canvas: proxy }, [proxy]);
+					worker.postMessage( { test: 'webgl_offscreen', canvas: proxy, ballNums: N, bShowBoundary: bShowBoundary }, [proxy]);
 				}
 			}
 
@@ -208,7 +201,7 @@ and open the template in the editor.
 					var ballBody = new CANNON.Body( {
 						mass: mass,
 						material: ballMaterial,
-						position: new CANNON.Vec3( (Math.random() - 0.5) * 20, (Math.random() - 0.5) *size, Math.random() * 20 )
+						position: new CANNON.Vec3( (Math.random() - 0.5) * 20, (Math.random() - 0.5) * size, Math.random() * 20 )
 					});
 				
 					ballBody.addShape( sphereShape );
