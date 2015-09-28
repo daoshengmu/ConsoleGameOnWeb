@@ -28,6 +28,7 @@ and open the template in the editor.
 			var size = 1;
 			var dampling = 0.01;
 			var mass = 10;
+			var dt = 1/60;
 			var sphereShape;
 			var ballMaterial;
 			var bodies = [];
@@ -35,7 +36,7 @@ and open the template in the editor.
 			var N = 1000;
 			var controls;
 			var bShowBoundary = false;
-			var camera;
+			var canvas, camera;
 
 			init();
 			animate();
@@ -46,7 +47,7 @@ and open the template in the editor.
 				world.broadphase = new CANNON.NaiveBroadphase();
 				world.gravity.set(0,-10,0);
 				world.solver.tolerance = 0.001;
-				
+
 				var stone = new CANNON.Material('stone');
 				var stone_stone = new CANNON.ContactMaterial(stone, stone, {
 				  friction: 0.3,
@@ -126,12 +127,13 @@ and open the template in the editor.
 
 				world.addContactMaterial(ballGroundContact);
 				initWorker();
+				window.addEventListener( 'resize', onWindowResize, false );
 			}
 
 			var worker;
 
 			function initWorker() {
-				var canvas = document.getElementById('c');
+				canvas = document.getElementById('c');
 				canvas.width = window.innerWidth;
 				canvas.height = window.innerHeight;
 				var proxy = canvas.transferControlToOffscreen();   // new interface added by offscreencanvas.
@@ -182,8 +184,6 @@ and open the template in the editor.
 			}
 
 			function animate( timestamp ) {
-				var dt = 1/60;
-
 				controls.update();
 
 				world.step( dt ); // Update the phyics world.
@@ -257,6 +257,10 @@ and open the template in the editor.
 				sphereBody.linearDampling = dampling;
 				demo.world.addBody( sphereBody );
 				demo.addVisual( sphereBody );
+			}
+
+			function onWindowResize() {
+				worker.postMessage( { canvasWidth: window.innerWidth, canvasHeight: window.innerHeight });
 			}
 
 			window.addEventListener("click",function(e){

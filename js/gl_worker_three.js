@@ -6,6 +6,7 @@ var renderer = null;
 var scene = null;
 var bInit = false;
 var visuals = [];
+var canvas;
 var N;
 
 onmessage = function(evt) {
@@ -18,7 +19,7 @@ onmessage = function(evt) {
 		importScripts("../lib/cannon.min.js");
 
 		// Init three.js render world.
-		var canvas = evt.data.canvas;
+		canvas = evt.data.canvas;
 		N = evt.data.ballNums;
 
 		renderer = new THREE.WebGLRenderer( { canvas: canvas } );
@@ -132,6 +133,9 @@ onmessage = function(evt) {
 		bInit = true;
 
 		return;
+
+	} else if (evt.data.canvasWidth && evt.data.canvasHeight) {
+		onWindowResize(evt.data.canvasWidth, evt.data.canvasHeight);
 	}
 
 	// Get bufffers that are sent from main thread.
@@ -189,9 +193,11 @@ function render() {
 	renderer.context.commit();
 }
 
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
+function onWindowResize(width, height) {
+	canvas.width = width;
+	canvas.height = height;
+	camera.aspect = canvas.width / canvas.height;
 	camera.updateProjectionMatrix();
-	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setSize(canvas.width, canvas.height, false);
 }
 
