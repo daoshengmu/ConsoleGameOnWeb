@@ -10,8 +10,6 @@ var N = 1000;
 
 onmessage = function(evt) {
 	var window = self;
-    console.log( 'data: ' + evt.data.canvas );
-    console.log( 'bInit: ' + bInit );
 
     if ( !bInit && evt.data.canvas ) {
 
@@ -30,9 +28,6 @@ onmessage = function(evt) {
 
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
-        camera.target = new THREE.Vector3(0, 0, 0);
-        //camera.up.set( 0, 0, 1 );
-        camera.position.set( 0, 10, 150 );
         
         // lights
         var light, materials;
@@ -66,7 +61,7 @@ onmessage = function(evt) {
         scene.add(light);
 
         // Add meshes
-        var materialColor = 0xdddddd;
+        var materialColor = 0x55ff55;
         var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
         
         // ground plane
@@ -103,7 +98,7 @@ onmessage = function(evt) {
         var ground = new THREE.Mesh( geometry, solidMaterial );
         ground.scale.set(10, 10, 10);
         ground.quaternion.setFromAxisAngle( new THREE.Vector3(1,0,0), Math.PI/2 );
-        ground.position.set( 0, 40, 0 );
+        ground.position.set(0, 40, 0);
         ground.castShadow = true;
         ground.receiveShadow = true;
         scene.add( ground );
@@ -127,29 +122,22 @@ onmessage = function(evt) {
         window.addEventListener( 'resize', onWindowResize, false );
         
         // Send camera to main thread
-        postMessage( "Send script to main script" );
+        postMessage( "Send script to main script: Finish initialization." );
         bInit = true;
 
         return;
     }
 
     // Get bufffers that are sent from main thread.
-    var cameraPos = evt.data.cameraPos;
-    var cameraQuatern = evt.data.cameraQuatern;
+    var cameraState = evt.data.cameraState;
     var positions = evt.data.positions;
     var quaternions = evt.data.quaternions;
 
-    if ( !cameraPos || !cameraQuatern 
-        || !positions || !quaternions )
+    if ( !cameraState || !positions || !quaternions )
         return;
 
-    console.log("set camera from main thread...");
-    console.log("camera position is " + cameraPos[0] + ", " + cameraPos[1] 
-        + ", " + cameraPos[2]);
-    console.log("camera quatorn is " + cameraQuatern[0] + ", " + cameraQuatern[1] 
-        + ", " + cameraQuatern[2] + ", " + cameraQuatern[3]);
-    camera.position.set( cameraPos[0], cameraPos[1], cameraPos[2] );
-    camera.quaternion.set( cameraQuatern[0], cameraQuatern[1], cameraQuatern[2], cameraQuatern[3] );
+    camera.position.set( cameraState[0], cameraState[1], cameraState[2] );
+    camera.quaternion.set( cameraState[3], cameraState[4], cameraState[5], cameraState[6] );
 
 
     for ( var i = 0; i < visuals.length; i++ ) {
@@ -164,7 +152,6 @@ onmessage = function(evt) {
     }
 
     workerAnimation();
-	postMessage( "Send script to main script" );
 }
 
 function generateBalls() {

@@ -35,7 +35,7 @@ and open the template in the editor.
 			var world;
 			var N = 1000;
 			var controls;
-			var controlObj;
+			var camera;
 
 			init();
 			animate();
@@ -115,10 +115,10 @@ and open the template in the editor.
 
 				// Init camera controller
 				// Controls
-				controlObj = new THREE.Object3D();
-				controlObj.target = new THREE.Vector3(0, 0, 0);
-				controlObj.position.set( 0, 10, 150 );
-				controls = new THREE.TrackballControls( controlObj );
+				camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.5, 10000);
+				camera.target = new THREE.Vector3(0, 0, 0);
+				camera.position.set(0, 30, 170);
+				controls = new THREE.TrackballControls( camera );
 				controls.rotateSpeed = 1.0;
 				controls.zoomSpeed = 1.2;
 				controls.panSpeed = 0.8;
@@ -155,19 +155,18 @@ and open the template in the editor.
 			}
 
 			function updateWorker() {
-				// It have to be new in loops. Why?
+				// It have to new them in loops. Why?
 				var positions = new Float32Array(N*3);	
 				var quaternions = new Float32Array(N*4);
-				var cameraPos = new Float32Array(3);
-				var cameraQuatern = new Float32Array(4);
+				var cameraState = new Float32Array(7);
 
-				cameraPos[0] = controlObj.position.x;
-				cameraPos[1] = controlObj.position.y;
-				cameraPos[2] = controlObj.position.z;
-				cameraQuatern[0] = controlObj.quaternion.z;
-				cameraQuatern[1] = controlObj.quaternion.x;
-				cameraQuatern[2] = controlObj.quaternion.w;
-				cameraQuatern[3] = controlObj.quaternion.y;
+				cameraState[0] = camera.position.x;
+				cameraState[1] = camera.position.y;
+				cameraState[2] = camera.position.z;
+				cameraState[3] = camera.quaternion.x;
+				cameraState[4] = camera.quaternion.y;
+				cameraState[5] = camera.quaternion.z;
+				cameraState[6] = camera.quaternion.w;
 
 				var lens = bodies.length;
 
@@ -186,7 +185,7 @@ and open the template in the editor.
 					quaternions[4 * i + 3] = q.w; 
 				}
 
-				worker.postMessage( { cameraPos: cameraPos, cameraQuatern: cameraQuatern, positions: positions, quaternions: quaternions }, [cameraPos.buffer, cameraQuatern.buffer, positions.buffer, quaternions.buffer]);
+				worker.postMessage( { cameraState: cameraState, positions: positions, quaternions: quaternions }, [cameraState.buffer, positions.buffer, quaternions.buffer]);
 			}
 
 			function animate( timestamp ) {
@@ -194,9 +193,6 @@ and open the template in the editor.
 
 				controls.update();
 
-				console.log("controlObj quatorn is " + controlObj.quaternion.x + ", " + controlObj.quaternion.y
-        + ", " + controlObj.quaternion.z + ", " + controlObj.quaternion.w );
-				
 				world.step( dt ); // Update the phyics world.
 				updateWorker();
 				requestAnimationFrame( animate );
