@@ -8,15 +8,17 @@ var bInit = false;
 var visuals = [];
 var canvas;
 var N;
+var vrDeviceEffect;
 
 onmessage = function(evt) {
 	var window = self;
 
 	if ( !bInit && evt.data.canvas ) {
 
-		console.log( 'import script... ' );        
+		console.log( 'import script... ' );
 		importScripts("../lib/three.js");
 		importScripts("../lib/cannon.min.js");
+		importScripts("../js/threejs/VREffect.js");
 
 		// Init three.js render world.
 		canvas = evt.data.canvas;
@@ -27,6 +29,9 @@ onmessage = function(evt) {
 		renderer.autoClear = false;
 		renderer.shadowMapEnabled = true;
 		renderer.shadowMapSoft = true;
+
+		// VR setup
+		vrDeviceEffect = new THREE.VREffect(renderer);
 
 		scene = new THREE.Scene();
 		camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
@@ -136,6 +141,17 @@ onmessage = function(evt) {
 
 	} else if (evt.data.canvasWidth && evt.data.canvasHeight) {
 		onWindowResize(evt.data.canvasWidth, evt.data.canvasHeight);
+	} else if (evt.data.eyeTranslationL && evt.data.eyeTranslationR) {
+		vrDeviceEffect.eyeTranslationL.x = evt.data.eyeTranslationL;
+		vrDeviceEffect.eyeTranslationR.x = evt.data.eyeTranslationR;
+		vrDeviceEffect.eyeFOVL.upDegrees = evt.data.eyeFOVLUp;
+		vrDeviceEffect.eyeFOVL.downDegrees = evt.data.eyeFOVLDown;
+		vrDeviceEffect.eyeFOVL.leftDegrees = evt.data.eyeFOVLLeft;
+		vrDeviceEffect.eyeFOVL.rightDegrees = evt.data.eyeFOVLRight;
+		vrDeviceEffect.eyeFOVR.upDegrees = evt.data.eyeFOVRUp;
+		vrDeviceEffect.eyeFOVR.downDegrees = evt.data.eyeFOVRDown;
+		vrDeviceEffect.eyeFOVR.leftDegrees = evt.data.eyeFOVRLeft;
+		vrDeviceEffect.eyeFOVR.rightDegrees = evt.data.eyeFOVRRight;
 	}
 
 	// Get bufffers that are sent from main thread.
@@ -189,7 +205,8 @@ function workerAnimation() {
 }
 
 function render() {
-	renderer.render( scene, camera );	
+	//renderer.render( scene, camera );	
+	vrDeviceEffect.renderWorker(scene, camera);
 	renderer.context.commit();
 }
 

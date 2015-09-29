@@ -34,9 +34,14 @@ and open the template in the editor.
 			var bodies = [];
 			var world;
 			var N = 1000;
+			var worker;
 			var controls;
 			var bShowBoundary = false;
 			var canvas, camera;
+			var vrHMD, vrPosSensor;
+			var eyeTranslationL, eyeFOVL;
+			var eyeTranslationR, eyeFOVR;
+			var bFullScreen = false, fKeyCode = 70;
 
 			init();
 			animate();
@@ -128,9 +133,154 @@ and open the template in the editor.
 				world.addContactMaterial(ballGroundContact);
 				initWorker();
 				window.addEventListener( 'resize', onWindowResize, false );
+				document.addEventListener( 'keydown', onKeyDown, false);
+
+				if ( navigator.getVRDevices ) {
+					navigator.getVRDevices().then( gotVRDevices );
+				}
 			}
 
-			var worker;
+			function onKeyDown(event) {
+				var key = event.keyCode || event.which;
+
+				if (key == fKeyCode) {
+					triggerFullscreen();
+				}
+			}
+
+			function triggerFullscreen() {
+
+				bFullScreen = !bFullScreen;
+
+				if ( vrPosSensor && bFullScreen ) {
+
+					if ( vrHMD === undefined ) return;
+					//if ( isFullscreen === boolean ) return;
+
+					if ( canvas.mozRequestFullScreen ) {
+						console.log("triggerFullscreen on main thread");
+						canvas.mozRequestFullScreen( { vrDisplay: vrHMD } );
+
+					} else if ( canvas.webkitRequestFullscreen ) {
+						console.log("triggerFullscreen on main thread");
+						canvas.webkitRequestFullscreen( { vrDisplay: vrHMD } );
+					}
+
+				   return;
+				}
+
+				 // toggle fullscreen
+				if ( !document.fullscreenElement
+				    && !document.mozFullScreenElement 
+				    && !document.webkitFullscreenElement 
+				    && !document.msFullscreenElement ) {  // current working methods
+
+				    if ( document.documentElement.requestFullscreen ) {
+				        document.documentElement.requestFullscreen();
+				    } else if ( document.documentElement.msRequestFullscreen ) {
+				        document.documentElement.msRequestFullscreen();
+				    } else if ( document.documentElement.mozRequestFullScreen ) {
+				        document.documentElement.mozRequestFullScreen();
+				    } else if ( document.documentElement.webkitRequestFullscreen ) {
+				        document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+				    }
+				} else {
+				    if (document.exitFullscreen) {
+				      document.exitFullscreen();
+				    } else if (document.msExitFullscreen) {
+				      document.msExitFullscreen();
+				    } else if (document.mozCancelFullScreen) {
+				      document.mozCancelFullScreen();
+				    } else if (document.webkitExitFullscreen) {
+				      document.webkitExitFullscreen();
+				    }
+
+				    onWindowResize();
+				}
+			}
+
+			window.addEventListener("load", function() {
+				if (navigator.getVRDevices) {
+					navigator.getVRDevices().then(vrDeviceCallback);
+				} else if (navigator.mozGetVRDevices) {
+					navigator.mozGetVRDevices(vrDeviceCallback);
+				}
+			}, false);
+
+			var isFullscreen = false;
+			var fullscreenchange = canvas.mozRequestFullScreen ? 'mozfullscreenchange' : 'webkitfullscreenchange';
+			document.addEventListener( fullscreenchange, function ( event ) {
+
+				isFullscreen = document.mozFullScreenElement || document.webkitFullscreenElement;
+
+			}, false );
+
+			function gotVRDevices( devices ) {
+
+				for ( var i = 0; i < devices.length; i ++ ) {
+					if ( devices[ i ] instanceof HMDVRDevice ) {
+						vrHMD = devices[ i ];
+
+						if ( vrHMD.getEyeParameters !== undefined ) {
+
+							var eyeParamsL = vrHMD.getEyeParameters( 'left' );
+							var eyeParamsR = vrHMD.getEyeParameters( 'right' );
+
+							eyeTranslationL = eyeParamsL.eyeTranslation;
+							eyeTranslationR = eyeParamsR.eyeTranslation;
+							eyeFOVL = eyeParamsL.recommendedFieldOfView;
+							eyeFOVR = eyeParamsR.recommendedFieldOfView;
+
+						} else {
+							// TODO: This is an older code path and not spec compliant.
+							// It should be removed at some point in the near future.
+							eyeTranslationL = vrHMD.getEyeTranslation( 'left' );
+							eyeTranslationR = vrHMD.getEyeTranslation( 'right' );
+							eyeFOVL = vrHMD.getRecommendedEyeFieldOfView( 'left' );
+							eyeFOVR = vrHMD.getRecommendedEyeFieldOfView( 'right' );
+						}
+						break; // We keep the first we encounter
+					}
+				}
+
+				if ( vrHMD === undefined ) {
+					if ( onError ) onError( 'HMD not available' );
+				}
+
+				//console.log( "main eyeTranslationL " + eyeTranslationL.x );
+				worker.postMessage( { 
+					eyeTranslationL: eyeTranslationL.x, 
+					eyeTranslationR: eyeTranslationR.x, 
+					eyeFOVLUp: eyeFOVL.upDegrees, eyeFOVLDown: eyeFOVL.downDegrees, 
+					eyeFOVLLeft: eyeFOVL.leftDegrees, eyeFOVLRight: eyeFOVL.rightDegrees, 
+					eyeFOVRUp: eyeFOVR.upDegrees, eyeFOVRDown: eyeFOVR.downDegrees, 
+					eyeFOVRLeft: eyeFOVR.leftDegrees, eyeFOVRRight: eyeFOVR.rightDegrees });
+			}
+
+			function vrDeviceCallback(devices) {
+
+				if (devices.length) {
+					// swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
+					// type: "success", timer: 3000,   showConfirmButton: false });
+				} else {
+					return;
+				}
+
+				for (var i = 0; i < devices.length; ++i) {
+
+					if (devices[i] instanceof HMDVRDevice) {
+					   vrHMD = devices[i];
+					}	
+
+					if (vrHMD && devices[i] instanceof PositionSensorVRDevice
+						&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+						vrPosSensor = devices[i];
+						console.log("WebVR get vrPosSensor...");
+						// We just want to get the first VR device.
+					   break;
+					}
+				}
+			}
 
 			function initWorker() {
 				canvas = document.getElementById('c');
@@ -187,8 +337,29 @@ and open the template in the editor.
 				controls.update();
 
 				world.step( dt ); // Update the phyics world.
+				updateVR();
 				updateWorker();
 				requestAnimationFrame( animate );
+			}
+
+			function updateVR() {
+				// For WebVR sensor
+				if ( vrPosSensor ) {
+				   var state = vrPosSensor.getState();
+
+					if ( state.hasOrientation ) {
+					   camera.quaternion.set(
+							   state.orientation.x, 
+							   state.orientation.y, 
+							   state.orientation.z, 
+							   state.orientation.w);
+					}
+
+					if ( state.hasPosition ) {
+
+					}
+				   
+				}
 			}
 
 			function generateBalls() {
