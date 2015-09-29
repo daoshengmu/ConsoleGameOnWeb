@@ -24,6 +24,7 @@ and open the template in the editor.
 		<script src="lib/cannon.js"></script>
 		<script src="lib/three.js"></script>
 		<script src="lib/threejs/TrackballControls.js"></script>
+		<script src="js/threejs/VREffect.js"></script>
 		<script type="text/javascript">
 			var scene;
 			var camera;
@@ -40,6 +41,9 @@ and open the template in the editor.
 			var bShowBoundary = false;
 			var visuals = [];
 			var bodies = [];
+			var vrHMD, vrPosSensor;
+			var vrDeviceEffect;
+			var bFullScreen = false, fKeyCode = 70;
 
 			init();
 			animate();
@@ -73,6 +77,9 @@ and open the template in the editor.
 				world.broadphase = new CANNON.NaiveBroadphase();
 				world.gravity.set(0,-10,0);
 				world.solver.tolerance = 0.001;
+
+				// VR setup
+				vrDeviceEffect = new THREE.VREffect(renderer);
 
 				var light, materials;
 				scene.add( new THREE.AmbientLight( 0x222222 ) );
@@ -221,6 +228,89 @@ and open the template in the editor.
 
 				world.addContactMaterial(ballGroundContact);
 				window.addEventListener( 'resize', onWindowResize, false );
+				document.addEventListener( 'keydown', onKeyDown, false);
+                document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
+                    onFullscreenChanged( event );
+                });
+			}
+
+			window.addEventListener("load", function() {
+				if (navigator.getVRDevices) {
+					navigator.getVRDevices().then(vrDeviceCallback);
+				} else if (navigator.mozGetVRDevices) {
+					navigator.mozGetVRDevices(vrDeviceCallback);
+				}
+			}, false);
+
+			function onKeyDown(event) {
+                var key = event.keyCode || event.which;
+
+                if (key == fKeyCode) {
+                    triggerFullscreen();
+                }
+            }
+
+            function triggerFullscreen() {
+
+                bFullScreen = !bFullScreen;
+
+                if ( vrPosSensor && bFullScreen ) {
+                    vrDeviceEffect.setFullScreen( bFullScreen );
+                    return;
+                }
+
+                 // toggle fullscreen
+                if ( !document.fullscreenElement
+                    && !document.mozFullScreenElement 
+                    && !document.webkitFullscreenElement 
+                    && !document.msFullscreenElement ) {  // current working methods
+
+                    if ( document.documentElement.requestFullscreen ) {
+                        document.documentElement.requestFullscreen();
+                    } else if ( document.documentElement.msRequestFullscreen ) {
+                        document.documentElement.msRequestFullscreen();
+                    } else if ( document.documentElement.mozRequestFullScreen ) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if ( document.documentElement.webkitRequestFullscreen ) {
+                        document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                      document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                      document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                      document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                      document.webkitExitFullscreen();
+                    }
+
+                    onWindowResize();
+                }
+            }
+
+			function vrDeviceCallback(devices) {
+
+				if (devices.length) {
+					// swal({ title: "VR device connected!",   text: "I will close in 3 seconds.",  
+					// type: "success", timer: 3000,   showConfirmButton: false });
+				} else {
+					return;
+				}
+
+				for (var i = 0; i < devices.length; ++i) {
+
+					if (devices[i] instanceof HMDVRDevice) {
+					   vrHMD = devices[i];
+					}	
+
+					if (vrHMD && devices[i] instanceof PositionSensorVRDevice
+						&& devices[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+					   vrPosSensor = devices[i];
+						// We just want to get the first VR device.
+					   break;
+					}
+				}
 			}
 
 			function animate( timestamp ) {
@@ -228,8 +318,27 @@ and open the template in the editor.
 				updateVisuals();
 				controls.update();
 
-				renderer.render( scene, camera );
-				requestAnimationFrame( animate );
+				// For WebVR sensor
+                if ( vrPosSensor ) {
+                   var state = vrPosSensor.getState();
+
+                    if ( state.hasOrientation ) {
+                       camera.quaternion.set(
+                               state.orientation.x, 
+                               state.orientation.y, 
+                               state.orientation.z, 
+                               state.orientation.w);
+                    }
+
+                    if ( state.hasPosition ) {
+
+                    }
+                    vrDeviceEffect.render(scene, camera);
+                } else {
+                	renderer.render(scene, camera);
+                }
+
+				requestAnimationFrame(animate);
 			}
 		   
 			function updateVisuals() {
