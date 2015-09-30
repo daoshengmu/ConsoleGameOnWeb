@@ -229,9 +229,9 @@ and open the template in the editor.
 				world.addContactMaterial(ballGroundContact);
 				window.addEventListener( 'resize', onWindowResize, false );
 				document.addEventListener( 'keydown', onKeyDown, false);
-                document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
-                    onFullscreenChanged( event );
-                });
+				document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
+					onFullscreenChanged( event );
+				});
 			}
 
 			window.addEventListener("load", function() {
@@ -243,51 +243,51 @@ and open the template in the editor.
 			}, false);
 
 			function onKeyDown(event) {
-                var key = event.keyCode || event.which;
+				var key = event.keyCode || event.which;
 
-                if (key == fKeyCode) {
-                    triggerFullscreen();
-                }
-            }
+				if (key == fKeyCode) {
+					triggerFullscreen();
+				}
+			}
 
-            function triggerFullscreen() {
+			function triggerFullscreen() {
 
-                bFullScreen = !bFullScreen;
+				bFullScreen = !bFullScreen;
 
-                if ( vrPosSensor && bFullScreen ) {
-                    vrDeviceEffect.setFullScreen( bFullScreen );
-                    return;
-                }
+				if ( vrPosSensor && bFullScreen ) {
+					vrDeviceEffect.setFullScreen( bFullScreen );
+					return;
+				}
 
-                 // toggle fullscreen
-                if ( !document.fullscreenElement
-                    && !document.mozFullScreenElement 
-                    && !document.webkitFullscreenElement 
-                    && !document.msFullscreenElement ) {  // current working methods
+				 // toggle fullscreen
+				if ( !document.fullscreenElement
+					&& !document.mozFullScreenElement 
+					&& !document.webkitFullscreenElement 
+					&& !document.msFullscreenElement ) {  // current working methods
 
-                    if ( document.documentElement.requestFullscreen ) {
-                        document.documentElement.requestFullscreen();
-                    } else if ( document.documentElement.msRequestFullscreen ) {
-                        document.documentElement.msRequestFullscreen();
-                    } else if ( document.documentElement.mozRequestFullScreen ) {
-                        document.documentElement.mozRequestFullScreen();
-                    } else if ( document.documentElement.webkitRequestFullscreen ) {
-                        document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
-                    }
-                } else {
-                    if (document.exitFullscreen) {
-                      document.exitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                      document.msExitFullscreen();
-                    } else if (document.mozCancelFullScreen) {
-                      document.mozCancelFullScreen();
-                    } else if (document.webkitExitFullscreen) {
-                      document.webkitExitFullscreen();
-                    }
+					if ( document.documentElement.requestFullscreen ) {
+						document.documentElement.requestFullscreen();
+					} else if ( document.documentElement.msRequestFullscreen ) {
+						document.documentElement.msRequestFullscreen();
+					} else if ( document.documentElement.mozRequestFullScreen ) {
+						document.documentElement.mozRequestFullScreen();
+					} else if ( document.documentElement.webkitRequestFullscreen ) {
+						document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+					}
+				} else {
+					if (document.exitFullscreen) {
+					  document.exitFullscreen();
+					} else if (document.msExitFullscreen) {
+					  document.msExitFullscreen();
+					} else if (document.mozCancelFullScreen) {
+					  document.mozCancelFullScreen();
+					} else if (document.webkitExitFullscreen) {
+					  document.webkitExitFullscreen();
+					}
 
-                    onWindowResize();
-                }
-            }
+					onWindowResize();
+				}
+			}
 
 			function vrDeviceCallback(devices) {
 
@@ -319,24 +319,24 @@ and open the template in the editor.
 				controls.update();
 
 				// For WebVR sensor
-                if ( vrPosSensor ) {
-                   var state = vrPosSensor.getState();
+				if ( vrPosSensor ) {
+				   var state = vrPosSensor.getState();
 
-                    if ( state.hasOrientation ) {
-                       camera.quaternion.set(
-                               state.orientation.x, 
-                               state.orientation.y, 
-                               state.orientation.z, 
-                               state.orientation.w);
-                    }
+					if ( state.hasOrientation ) {
+					   camera.quaternion.set(
+							   state.orientation.x, 
+							   state.orientation.y, 
+							   state.orientation.z, 
+							   state.orientation.w);
+					}
 
-                    if ( state.hasPosition ) {
+					if ( state.hasPosition ) {
 
-                    }
-                    vrDeviceEffect.render(scene, camera);
-                } else {
-                	renderer.render(scene, camera);
-                }
+					}
+					vrDeviceEffect.render(scene, camera);
+				} else {
+					renderer.render(scene, camera);
+				}
 
 				requestAnimationFrame(animate);
 			}
