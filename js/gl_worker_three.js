@@ -159,25 +159,28 @@ onmessage = function(evt) {
 	var positions = evt.data.positions;
 	var quaternions = evt.data.quaternions;
 
-	if ( !cameraState || !positions || !quaternions )
-		return;
+	if ( cameraState && positions && quaternions ) {
 
-	camera.position.set( cameraState[0], cameraState[1], cameraState[2] );
-	camera.quaternion.set( cameraState[3], cameraState[4], cameraState[5], cameraState[6] );
+		camera.position.set( cameraState[0], cameraState[1], cameraState[2] );
+		camera.quaternion.set( cameraState[3], cameraState[4], cameraState[5], cameraState[6] );
 
 
-	for ( var i = 0; i < visuals.length; i++ ) {
-		visuals[i].position.set( positions[3 * i + 0],
-								positions[3 * i + 1],
-								positions[3 * i + 2] );
+		for ( var i = 0; i < visuals.length; i++ ) {
+			visuals[i].position.set( positions[3 * i + 0],
+									positions[3 * i + 1],
+									positions[3 * i + 2] );
 
-		visuals[i].quaternion.set( quaternions[4 * i + 0],
-								quaternions[4 * i + 1],
-								quaternions[4 * i + 2],
-								quaternions[4 * i + 3] );
+			visuals[i].quaternion.set( quaternions[4 * i + 0],
+									quaternions[4 * i + 1],
+									quaternions[4 * i + 2],
+									quaternions[4 * i + 3] );
+		}
+
+		workerAnimation();
+		postMessage({ cameraState: cameraState, positions:positions, quaternions:quaternions}
+			, [ cameraState.buffer, positions.buffer, quaternions.buffer ]);
 	}
 
-	workerAnimation();
 }
 
 function generateBalls() {
