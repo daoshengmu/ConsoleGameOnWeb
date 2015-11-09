@@ -24,6 +24,7 @@ and open the template in the editor.
 		<script src="lib/cannon.js"></script>
 		<script src="lib/three.js"></script>
 		<script src="lib/threejs/TrackballControls.js"></script>
+		<script src="lib/stats.min.js"></script>
 		<script src="js/threejs/VREffect.js"></script>
 		<script type="text/javascript">
 			var scene;
@@ -44,6 +45,7 @@ and open the template in the editor.
 			var vrHMD, vrPosSensor;
 			var vrDeviceEffect;
 			var bFullScreen = false, fKeyCode = 70;
+			var stats = null;
 
 			init();
 			animate();
@@ -62,6 +64,12 @@ and open the template in the editor.
 				camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
 				camera.target = new THREE.Vector3(0, 0, 0);
 				camera.position.set(0, 30, 170);
+
+				// init stats       
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				document.body.appendChild( stats.domElement );
 
 				// Controls
 				controls = new THREE.TrackballControls(camera);
@@ -317,6 +325,7 @@ and open the template in the editor.
 				world.step( dt ); // Update the phyics world.
 				updateVisuals();
 				controls.update();
+				stats.update();
 
 				// For WebVR sensor
 				if ( vrPosSensor ) {
