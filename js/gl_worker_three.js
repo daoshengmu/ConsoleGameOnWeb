@@ -201,13 +201,14 @@ function generateBalls() {
 }
 
 function workerAnimation() {
-	render();	
+	render();
 }
 
 function render() {
 	//renderer.render( scene, camera );	
 	vrDeviceEffect.renderWorker(scene, camera);
 	renderer.context.commit();
+	postMessage( "worker update done." );
 }
 
 function onWindowResize(width, height) {

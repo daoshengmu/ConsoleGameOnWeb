@@ -43,7 +43,7 @@ and open the template in the editor.
 			var eyeTranslationL, eyeFOVL;
 			var eyeTranslationR, eyeFOVR;
 			var bFullScreen = false, fKeyCode = 70;
-			var stats = null;
+			var physics_stats = null, render_stats = null;
 
 			init();
 			animate();
@@ -63,10 +63,15 @@ and open the template in the editor.
 				world.addContactMaterial(stone_stone);
 
 				// init stats       
-				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				document.body.appendChild( stats.domElement );
+				physics_stats = new Stats();
+				physics_stats.domElement.style.position = 'absolute';
+				physics_stats.domElement.style.top = '0px';
+				document.body.appendChild( physics_stats.domElement );
+
+				render_stats = new Stats();
+				render_stats.domElement.style.position = 'absolute';
+				render_stats.domElement.style.top = '50px';
+				document.body.appendChild( render_stats.domElement );
 
 				// ground plane
 				groundMaterial = new CANNON.Material();
@@ -298,9 +303,10 @@ and open the template in the editor.
 
 				if ( window.Worker ) { 
 
-					worker = new Worker("js/gl_worker_three.js");
+					worker = new Worker('js/gl_worker_three.js');
 					worker.onmessage = function( evt ) {
-						console.log('Message received from worker ' + evt.data );
+						//console.log('Message received from worker ' + evt.data );
+						render_stats.update();
 					};
 
 					worker.postMessage( { test: 'webgl_offscreen', canvas: proxy, ballNums: N, bShowBoundary: bShowBoundary }, [proxy]);
@@ -347,7 +353,7 @@ and open the template in the editor.
 				world.step( dt ); // Update the phyics world.
 				updateVR();
 				updateWorker();
-				stats.update();
+				physics_stats.update();
 				requestAnimationFrame( animate );
 			}
 
