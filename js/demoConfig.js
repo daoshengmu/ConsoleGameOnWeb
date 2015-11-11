@@ -113,6 +113,47 @@ PanoramaConfig.VREFFECT_MODE = 1;
 PanoramaConfig.VRDEVICE_MODE = 2;
 
 
+function WorkerConfig( renderer ) {
+    var _renderer = renderer;
+    var _balls = 500;
+    var _funcList = [];
+    var _renderMode = WorkerConfig.GENERAL_MODE;
+    
+    this.switchRenderMode = function( value ) {
+        
+        if ( value <= PanoramaConfig.VRDEVICE_MODE ) {
+            
+            _renderMode = value;
+        } else {
+            
+            console.error( "Not define switchRenderMode type: " + value );
+        }
+    };
+
+    this.switchBalls = function( value ) {
+        
+        _balls = value;
+    };
+
+    this.getRenderMode = function() {
+
+        return _renderMode;
+    };
+    
+    this.change = function( key, value ) {
+        
+        _funcList[ key ](value);
+    };
+    
+    // register function ptr
+    _funcList["render mode"] = this.switchRenderMode;
+    _funcList["balls"] = this.switchBalls;
+}
+
+WorkerConfig.GENERAL_MODE = 0;
+WorkerConfig.VRDEVICE_MODE = 1;
+
+
 
 
 
