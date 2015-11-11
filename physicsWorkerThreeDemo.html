@@ -25,6 +25,9 @@ and open the template in the editor.
 		<script src="lib/three.js"></script>
 		<script src="lib/threejs/TrackballControls.js"></script>
 		<script src="lib/stats.min.js"></script>
+		<script src="lib/dat.gui.min.js"></script>
+        <script src="js/gui.js"></script>
+        <script src="js/demoConfig.js"></script>
 		<script type="text/javascript">
 			var size = 1;
 			var dampling = 0.01;
@@ -34,7 +37,7 @@ and open the template in the editor.
 			var ballMaterial;
 			var bodies = [];
 			var world;
-			var N = 1000;
+			var N = 50;
 			var worker;
 			var controls;
 			var bShowBoundary = false;
@@ -44,6 +47,7 @@ and open the template in the editor.
 			var eyeTranslationR, eyeFOVR;
 			var bFullScreen = false, fKeyCode = 70;
 			var physics_stats = null, render_stats = null;
+			var workerConfig = null;
 			var positions = new Float32Array(N*3);	
 			var quaternions = new Float32Array(N*4);
 			var cameraState = new Float32Array(7);
@@ -75,6 +79,8 @@ and open the template in the editor.
 				render_stats.domElement.style.top = '50px';
 				document.body.appendChild( render_stats.domElement );
 
+				workerConfig = new WorkerConfig();
+				initWorkerGUI(workerConfig);
 
 				// ground plane
 				groundMaterial = new CANNON.Material();
@@ -133,7 +139,15 @@ and open the template in the editor.
 				camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.5, 10000);
 				camera.target = new THREE.Vector3(0, 0, 0);
 				camera.position.set(0, 30, 170);
-				controls = new THREE.TrackballControls( camera );
+	
+				generateBalls();
+				// Create contact material behaviour
+				var ballGroundContact = new CANNON.ContactMaterial(groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 });
+
+				world.addContactMaterial(ballGroundContact);
+				initWorker();
+
+				controls = new THREE.TrackballControls(camera, canvas);
 				controls.rotateSpeed = 1.0;
 				controls.zoomSpeed = 1.2;
 				controls.panSpeed = 0.8;
@@ -142,12 +156,6 @@ and open the template in the editor.
 				controls.staticMoving = true;
 				controls.dynamicDampingFactor = 0.3;
 
-				generateBalls();
-				// Create contact material behaviour
-				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
-
-				world.addContactMaterial(ballGroundContact);
-				initWorker();
 				window.addEventListener( 'resize', onWindowResize, false );
 				document.addEventListener( 'keydown', onKeyDown, false);
 

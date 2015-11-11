@@ -25,6 +25,10 @@ and open the template in the editor.
 		<script src="lib/three.js"></script>
 		<script src="lib/threejs/TrackballControls.js"></script>
 		<script src="js/threejs/VREffect.js"></script>
+		<script src="lib/stats.min.js"></script>
+		<script src="lib/dat.gui.min.js"></script>
+		<script src="js/gui.js"></script>
+        <script src="js/demoConfig.js"></script>
 		<script type="text/javascript">
 			var scene;
 			var camera;
@@ -35,7 +39,7 @@ and open the template in the editor.
 			var sphereShape;
 			var ballMaterial;
 			var world;
-			var N = 1000;
+			var N = 50;
 			var controls;
 			var dt = 1/60;
 			var bShowBoundary = false;
@@ -44,6 +48,8 @@ and open the template in the editor.
 			var vrHMD, vrPosSensor;
 			var vrDeviceEffect;
 			var bFullScreen = false, fKeyCode = 70;
+			var stats = null;
+			var workerConfig = null;
 
 			init();
 			animate();
@@ -54,17 +60,26 @@ and open the template in the editor.
 				canvas.width = window.innerWidth;
 				canvas.height = window.innerHeight;
 				renderer = new THREE.WebGLRenderer( { canvas: canvas } );
-				renderer.setClearColor( 0x000000, 1.0 );
+				renderer.setClearColor(0x000000, 1.0);
 				renderer.autoClear = false;
 				renderer.shadowMapEnabled = true;
 				renderer.shadowMapSoft = true;
 				scene = new THREE.Scene();
-				camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
+				camera = new THREE.PerspectiveCamera(30, canvas.width / canvas.height, 0.5, 10000);
 				camera.target = new THREE.Vector3(0, 0, 0);
 				camera.position.set(0, 30, 170);
 
+				// init stats       
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				document.body.appendChild(stats.domElement);
+
+				workerConfig = new WorkerConfig();
+				initWorkerGUI(workerConfig);
+
 				// Controls
-				controls = new THREE.TrackballControls(camera);
+				controls = new THREE.TrackballControls(camera, renderer.domElement);
 				controls.rotateSpeed = 1.0;
 				controls.zoomSpeed = 1.2;
 				controls.panSpeed = 0.8;
@@ -338,6 +353,7 @@ and open the template in the editor.
 					renderer.render(scene, camera);
 				}
 
+				stats.update();
 				requestAnimationFrame(animate);
 			}
 		   
