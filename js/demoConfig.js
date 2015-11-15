@@ -115,13 +115,16 @@ PanoramaConfig.VRDEVICE_MODE = 2;
 
 function WorkerConfig( renderer ) {
     var _renderer = renderer;
-    var _balls = 500;
+    var _ballNum = 500;
     var _funcList = [];
     var _renderMode = WorkerConfig.GENERAL_MODE;
+    var self = this;
+    
+    this.adjustBall = null;
     
     this.switchRenderMode = function( value ) {
         
-        if ( value <= PanoramaConfig.VRDEVICE_MODE ) {
+        if ( value <= WorkerConfig.VRDEVICE_MODE ) {
             
             _renderMode = value;
         } else {
@@ -132,11 +135,17 @@ function WorkerConfig( renderer ) {
 
     this.switchBalls = function( value ) {
         
-        _balls = value;
+        _ballNum = value;
+
+        if (typeof self.adjustBall !== 'undefined')
+            self.adjustBall(value);
+    };
+
+    this.getNumOfBall = function() {
+        return _ballNum;
     };
 
     this.getRenderMode = function() {
-
         return _renderMode;
     };
     

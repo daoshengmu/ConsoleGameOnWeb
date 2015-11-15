@@ -28,7 +28,7 @@ and open the template in the editor.
 		<script src="lib/stats.min.js"></script>
 		<script src="lib/dat.gui.min.js"></script>
 		<script src="js/gui.js"></script>
-        <script src="js/demoConfig.js"></script>
+		<script src="js/demoConfig.js"></script>
 		<script type="text/javascript">
 			var scene;
 			var camera;
@@ -39,7 +39,6 @@ and open the template in the editor.
 			var sphereShape;
 			var ballMaterial;
 			var world;
-			var N = 50;
 			var controls;
 			var dt = 1/60;
 			var bShowBoundary = false;
@@ -50,6 +49,8 @@ and open the template in the editor.
 			var bFullScreen = false, fKeyCode = 70;
 			var stats = null;
 			var workerConfig = null;
+			var lastRenderMode = WorkerConfig.GENERAL_MODE;
+			var lastNumOfBalls = 0;
 
 			init();
 			animate();
@@ -76,6 +77,7 @@ and open the template in the editor.
 				document.body.appendChild(stats.domElement);
 
 				workerConfig = new WorkerConfig();
+				workerConfig.adjustBall = generateBalls;
 				initWorkerGUI(workerConfig);
 
 				// Controls
@@ -237,7 +239,7 @@ and open the template in the editor.
 				sphereShape = new CANNON.Sphere(size);
 				ballMaterial = new CANNON.Material();
 
-				generateBalls();
+				generateBalls(workerConfig.getNumOfBall());
 				// Create contact material behaviour
 				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
 
@@ -266,7 +268,6 @@ and open the template in the editor.
 			}
 
 			function triggerFullscreen() {
-
 				bFullScreen = !bFullScreen;
 
 				if ( vrPosSensor && bFullScreen ) {
@@ -333,22 +334,36 @@ and open the template in the editor.
 				updateVisuals();
 				controls.update();
 
+				var renderMode = workerConfig.getRenderMode();
+					
+				if ( lastRenderMode != renderMode ) {
+					onWindowResize();
+					lastRenderMode = renderMode;
+				}
+
+				if ( renderMode == WorkerConfig.GENERAL_MODE ) {
+					renderer.render( scene, camera );
+				} else if ( renderMode == WorkerConfig.VRDEVICE_MODE ) {
+					vrDeviceEffect.render( scene, camera );
+				} else {
+					console.error( "Not define this render mode: " + renderMode );
+				}
+
 				// For WebVR sensor
 				if ( vrPosSensor ) {
 				   var state = vrPosSensor.getState();
 
 					if ( state.hasOrientation ) {
-					   camera.quaternion.set(
-							   state.orientation.x, 
-							   state.orientation.y, 
-							   state.orientation.z, 
-							   state.orientation.w);
+						camera.quaternion.set(
+							state.orientation.x, 
+							state.orientation.y, 
+							state.orientation.z, 
+							state.orientation.w);
 					}
 
 					if ( state.hasPosition ) {
 
 					}
-					vrDeviceEffect.render(scene, camera);
 				} else {
 					renderer.render(scene, camera);
 				}
@@ -370,14 +385,21 @@ and open the template in the editor.
 				}
 			}
 
-			function generateBalls() {
-
+			function generateBalls(num) {
 				var materialColor = 0xdddddd;
 				var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
 				var radius = 1;
 				var size = radius;
 
-				for ( var i = 0; i < N; ++i ) {
+				for ( var i = 0; i < lastNumOfBalls; ++i ) {
+					scene.remove( visuals[i] );
+					world.remove( bodies[i] );
+				}
+				
+				visuals = [];
+				bodies = [];
+
+				for ( var i = 0; i < num; ++i ) {
 
 					var randX = (Math.random() - 0.5) * 20;
 					var randY = (Math.random() - 0.5) * size;
@@ -402,6 +424,8 @@ and open the template in the editor.
 					world.addBody( ballBody );
 					bodies.push( ballBody );
 				}
+
+				lastNumOfBalls = num;
 			}
 
 			function shootBall() {
@@ -411,7 +435,7 @@ and open the template in the editor.
 				var shootDirection = new THREE.Vector3();
 				var projector = new THREE.Projector();
 
-				shootDirection.set( 0,0,1 );
+				shootDirection.set( 0, 0, 1 );
 				camera = demo.getCamera();
 				var mat = new CANNON.Material();
 				projector.unprojectVector(shootDirection, camera);
