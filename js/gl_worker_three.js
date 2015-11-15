@@ -7,8 +7,9 @@ var scene = null;
 var bInit = false;
 var visuals = [];
 var canvas;
-var N;
+var lastNumOfBalls = 0;
 var vrDeviceEffect;
+var enableVR = false;
 
 onmessage = function(evt) {
 	var window = self;
@@ -22,7 +23,7 @@ onmessage = function(evt) {
 
 		// Init three.js render world.
 		canvas = evt.data.canvas;
-		N = evt.data.ballNums;
+		var balls = evt.data.ballNums;
 
 		renderer = new THREE.WebGLRenderer( { canvas: canvas } );
 		renderer.setClearColor( 0x000000, 1.0 );
@@ -67,7 +68,7 @@ onmessage = function(evt) {
 		light.shadowMapWidth = SHADOW_MAP_WIDTH;
 		light.shadowMapHeight = SHADOW_MAP_HEIGHT;
 
-		scene.add(light);
+		scene.add( light) ;
 
 		// Add meshes
 		var materialColor = 0x55ff55;
@@ -129,7 +130,7 @@ onmessage = function(evt) {
 		var size = radius;
 		var height = 5;
 
-		generateBalls();
+		generateBalls(balls);
 
 		window.addEventListener( 'resize', onWindowResize, false );
 		
@@ -152,6 +153,16 @@ onmessage = function(evt) {
 		vrDeviceEffect.eyeFOVR.downDegrees = evt.data.eyeFOVRDown;
 		vrDeviceEffect.eyeFOVR.leftDegrees = evt.data.eyeFOVRLeft;
 		vrDeviceEffect.eyeFOVR.rightDegrees = evt.data.eyeFOVRRight;
+	} else if (evt.data.renderMode) {
+		if (evt.data.renderMode === 'GENERAL') {
+			enableVR = false;
+		} else if (evt.data.renderMode === 'VR') {
+			enableVR = true;
+		} else {
+			console.error( "Worker: Not define this render mode: " + renderMode );
+		}
+	} else if (typeof evt.data.ballNums !== 'undefined') {
+		generateBalls(evt.data.ballNums);
 	}
 
 	// Get bufffers that are sent from main thread.
@@ -183,14 +194,20 @@ onmessage = function(evt) {
 
 }
 
-function generateBalls() {
+function generateBalls(num) {
 
 	var materialColor = 0xdddddd;
 	var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
 	var radius = 1;
 	var size = radius;
 
-	for ( var i = 0; i < N; ++i ) {
+	for ( var i = 0; i < lastNumOfBalls; ++i ) {
+		scene.remove( visuals[i] );
+	}
+	
+	visuals = [];
+
+	for ( var i = 0; i < num; ++i ) {
 
 		var sphere_geometry = new THREE.SphereGeometry( radius, 8, 8 );
 		mesh = new THREE.Mesh( sphere_geometry, solidMaterial );
@@ -201,6 +218,8 @@ function generateBalls() {
 		scene.add( mesh );
 		visuals.push( mesh );
 	}
+
+	lastNumOfBalls = num;
 }
 
 function workerAnimation() {
@@ -208,8 +227,13 @@ function workerAnimation() {
 }
 
 function render() {
-	//renderer.render( scene, camera );	
-	vrDeviceEffect.renderWorker(scene, camera);
+	if (!enableVR) {
+		renderer.render( scene, camera );	
+	}
+	else {
+		vrDeviceEffect.renderWorker(scene, camera);
+	}
+
 	renderer.context.commit();
 }
 

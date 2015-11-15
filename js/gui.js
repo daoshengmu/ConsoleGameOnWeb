@@ -68,10 +68,10 @@ function initWorkerGUI( config ) {
         
     // } );
 
-    gui.add( Worker_Params, "balls" ).min( 0 ).max( 1500 ).onChange( );
-    // gui.add( Worker_Params, 'balls', 0, 1500, 100).onChange( function(value) {
+    //gui.add( Worker_Params, "balls" ).min( 0 ).max( 1500 ).onChange( );
+    gui.add( Worker_Params, 'balls', 0, 1500 ).step(100).onChange( function(value) {
        
-    //     config.change( "balls", value );
-    // } );
+        config.change( "balls", value );
+    } );
     //gui.add( Worker_Params, "balls", 0, 1500, 100 ).name( "balls" ).onChange();
 }

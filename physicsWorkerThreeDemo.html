@@ -37,7 +37,6 @@ and open the template in the editor.
 			var ballMaterial;
 			var bodies = [];
 			var world;
-			var N = 50;
 			var worker;
 			var controls;
 			var bShowBoundary = false;
@@ -48,9 +47,11 @@ and open the template in the editor.
 			var bFullScreen = false, fKeyCode = 70;
 			var physics_stats = null, render_stats = null;
 			var workerConfig = null;
-			var positions = new Float32Array(N*3);	
-			var quaternions = new Float32Array(N*4);
-			var cameraState = new Float32Array(7);
+			var lastRenderMode = WorkerConfig.GENERAL_MODE;
+			var lastNumOfBalls = 0;	
+			var positions;	
+			var quaternions;
+			var cameraState;
 
 			init();
 			animate();
@@ -68,6 +69,7 @@ and open the template in the editor.
 				  restitution: 0.2
 				});
 				world.addContactMaterial(stone_stone);
+				cameraState = new Float32Array(7);
 
 				// init stats       
 				physics_stats = new Stats();
@@ -80,6 +82,7 @@ and open the template in the editor.
 				document.body.appendChild( render_stats.domElement );
 
 				workerConfig = new WorkerConfig();
+				workerConfig.adjustBall = generateBalls;
 				initWorkerGUI(workerConfig);
 
 				// ground plane
@@ -140,7 +143,7 @@ and open the template in the editor.
 				camera.target = new THREE.Vector3(0, 0, 0);
 				camera.position.set(0, 30, 170);
 	
-				generateBalls();
+				generateBalls(workerConfig.getNumOfBall());
 				// Create contact material behaviour
 				var ballGroundContact = new CANNON.ContactMaterial(groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 });
 
@@ -332,7 +335,7 @@ and open the template in the editor.
 						render_stats.update();
 					};
 
-					worker.postMessage( { test: 'webgl_offscreen', canvas: proxy, ballNums: N, bShowBoundary: bShowBoundary }, [proxy]);
+					worker.postMessage( { test: 'webgl_offscreen', canvas: proxy, ballNums: lastNumOfBalls, bShowBoundary: bShowBoundary }, [proxy]);
 				}
 			}
 
@@ -372,6 +375,24 @@ and open the template in the editor.
 				updateVR();
 				//updateWorker();
 				physics_stats.update();
+
+				// Change render
+				var renderMode = workerConfig.getRenderMode();
+
+				if ( lastRenderMode != renderMode ) {
+					onWindowResize();
+
+					if ( renderMode == WorkerConfig.GENERAL_MODE ) {
+						worker.postMessage( { renderMode: 'GENERAL'} );
+					} else if ( renderMode == WorkerConfig.VRDEVICE_MODE ) {
+						worker.postMessage( { renderMode: 'VR'} );
+					} else {
+						console.error( "Not define this render mode: " + renderMode );
+					}
+
+					lastRenderMode = renderMode;
+				}
+
 				requestAnimationFrame( animate );
 			}
 
@@ -395,12 +416,21 @@ and open the template in the editor.
 				}
 			}
 
-			function generateBalls() {
+			function generateBalls(num) {
 
 				var radius = 1;
 				var size = radius;
 
-				for ( var i = 0; i < N; ++i ) {
+				for ( var i = 0; i < lastNumOfBalls; ++i ) {
+					world.remove(bodies[i]);
+				}
+				
+				bodies = [];
+
+				positions = new Float32Array(num*3);	
+			 	quaternions = new Float32Array(num*4);
+
+				for ( var i = 0; i < num; ++i ) {
 
 					var ballBody = new CANNON.Body( {
 						mass: mass,
@@ -413,6 +443,11 @@ and open the template in the editor.
 					world.addBody( ballBody );
 					bodies.push( ballBody );
 				}
+
+				if (worker)
+					worker.postMessage( {ballNums: num} );
+				
+				lastNumOfBalls = num;
 			}
 
 			function shootBall() {
