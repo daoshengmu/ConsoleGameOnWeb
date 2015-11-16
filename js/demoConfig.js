@@ -119,7 +119,7 @@ function WorkerConfig( renderer ) {
     var _funcList = [];
     var _renderMode = WorkerConfig.GENERAL_MODE;
     var self = this;
-    
+
     this.adjustBall = null;
     
     this.switchRenderMode = function( value ) {
