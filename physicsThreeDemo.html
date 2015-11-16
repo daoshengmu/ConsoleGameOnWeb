@@ -99,9 +99,9 @@ and open the template in the editor.
 				vrDeviceEffect = new THREE.VREffect(renderer);
 
 				var light, materials;
-				scene.add( new THREE.AmbientLight( 0x222222 ) );
+				scene.add( new THREE.AmbientLight(0x222222) );
 
-				light = new THREE.DirectionalLight( 0xffffff, 0.8 );
+				light = new THREE.DirectionalLight(0xffffff, 0.8);
 				var d = 50;
 
 				light.position.set( d, d, d );
@@ -204,7 +204,7 @@ and open the template in the editor.
 				}				
 
 				var planeShapeYmax = new CANNON.Plane();
-				var planeYmax = new CANNON.Body({ mass: 0,  material: stone });
+				var planeYmax = new CANNON.Body({ mass: 0, material: stone });
 				planeYmax.addShape(planeShapeYmax);
 				planeYmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI/2);
 				planeYmax.position.set(0,40,0);
@@ -336,7 +336,7 @@ and open the template in the editor.
 
 				var renderMode = workerConfig.getRenderMode();
 					
-				if ( lastRenderMode != renderMode ) {
+				if (lastRenderMode != renderMode) {
 					onWindowResize();
 					lastRenderMode = renderMode;
 				}
@@ -376,10 +376,10 @@ and open the template in the editor.
 				var lens = bodies.length;
 
 				// Read position data into visuals
-				for(var i=0; i<lens; i++){
+				for (var i=0; i<lens; i++){
 					var b = bodies[i], visual = visuals[i];
 					visual.position.copy(b.position);
-					if(b.quaternion){
+					if (b.quaternion){
 						visual.quaternion.copy(b.quaternion);
 					}
 				}

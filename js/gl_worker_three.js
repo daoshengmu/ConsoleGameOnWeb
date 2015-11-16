@@ -14,7 +14,7 @@ var enableVR = false;
 onmessage = function(evt) {
 	var window = self;
 
-	if ( !bInit && evt.data.canvas ) {
+	if (!bInit && typeof evt.data.canvas !== 'undefined') {
 
 		console.log( 'import script... ' );
 		importScripts("../lib/three.js");
@@ -140,9 +140,11 @@ onmessage = function(evt) {
 
 		return;
 
-	} else if (evt.data.canvasWidth && evt.data.canvasHeight) {
+	} else if (typeof evt.data.canvasWidth !== 'undefined' 
+		&& typeof evt.data.canvasHeight !== 'undefined') {
 		onWindowResize(evt.data.canvasWidth, evt.data.canvasHeight);
-	} else if (evt.data.eyeTranslationL && evt.data.eyeTranslationR) {
+	} else if (typeof evt.data.eyeTranslationL !== 'undefined' 
+		&& typeof evt.data.eyeTranslationR !== 'undefined') {
 		vrDeviceEffect.eyeTranslationL.x = evt.data.eyeTranslationL;
 		vrDeviceEffect.eyeTranslationR.x = evt.data.eyeTranslationR;
 		vrDeviceEffect.eyeFOVL.upDegrees = evt.data.eyeFOVLUp;
@@ -153,7 +155,7 @@ onmessage = function(evt) {
 		vrDeviceEffect.eyeFOVR.downDegrees = evt.data.eyeFOVRDown;
 		vrDeviceEffect.eyeFOVR.leftDegrees = evt.data.eyeFOVRLeft;
 		vrDeviceEffect.eyeFOVR.rightDegrees = evt.data.eyeFOVRRight;
-	} else if (evt.data.renderMode) {
+	} else if (typeof evt.data.renderMode !== 'undefined') {
 		if (evt.data.renderMode === 'GENERAL') {
 			enableVR = false;
 		} else if (evt.data.renderMode === 'VR') {
