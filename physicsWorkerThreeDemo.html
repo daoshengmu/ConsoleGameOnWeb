@@ -31,7 +31,7 @@ and open the template in the editor.
 		<script type="text/javascript">
 			var size = 1;
 			var dampling = 0.01;
-			var mass = 10;
+			var ballMass = 10;
 			var dt = 1/60;
 			var sphereShape;
 			var ballMaterial;
@@ -145,9 +145,12 @@ and open the template in the editor.
 	
 				generateBalls(workerConfig.getNumOfBall());
 				// Create contact material behaviour
-				var ballGroundContact = new CANNON.ContactMaterial(groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 });
-
+				var ballGroundContact = new CANNON.ContactMaterial(groundMaterial, ballMaterial, { friction: 0.3, restitution: 4 });
 				world.addContactMaterial(ballGroundContact);
+
+				var ballballContact = new CANNON.ContactMaterial( ballMaterial, ballMaterial, { friction: 0.0, restitution: 1 } );
+				world.addContactMaterial(ballGroundContact);
+
 				initWorker();
 
 				controls = new THREE.TrackballControls(camera, canvas);
@@ -370,9 +373,8 @@ and open the template in the editor.
 			function animate( timestamp ) {
 				controls.update();
 
-				world.step( dt ); // Update the phyics world.
+				world.step(dt); // Update the phyics world.
 				updateVR();
-				//updateWorker();
 				physics_stats.update();
 
 				// Change render
@@ -431,10 +433,13 @@ and open the template in the editor.
 
 				for ( var i = 0; i < num; ++i ) {
 
+					var randX = (Math.random() - 0.5) * 20;
+					var randY = (Math.random() - 0.5) * size;
+					var randZ = Math.random() * 20;
 					var ballBody = new CANNON.Body( {
-						mass: mass,
+						mass: ballMass,
 						material: ballMaterial,
-						position: new CANNON.Vec3( (Math.random() - 0.5) * 20, (Math.random() - 0.5) * size, Math.random() * 20 )
+						position: new CANNON.Vec3(randX, randY, randZ)
 					});
 				
 					ballBody.addShape( sphereShape );
@@ -461,12 +466,12 @@ and open the template in the editor.
 				var mat = new CANNON.Material();
 				projector.unprojectVector(shootDirection, camera);
 				var sphereBody = new CANNON.Body( {
-					mass: mass,
+					mass: ballMass,
 					material: mat,
 					position: new CANNON.Vec3( 3 * size, size, ballHeight )
 				});
 				var mat_mat = new CANNON.ContactMaterial(mat, mat, {
-				  friction: 0.3,
+				  friction: 0.5,
 				  restitution: 5
 				});
 				var mat_ground = new CANNON.ContactMaterial(groundMaterial, mat, { friction: 0.0, restitution: 5 });
