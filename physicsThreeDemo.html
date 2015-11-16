@@ -35,7 +35,7 @@ and open the template in the editor.
 			var renderer;
 			var size = 1;
 			var dampling = 0.01;
-			var mass = 10;
+			var ballMass = 10;
 			var sphereShape;
 			var ballMaterial;
 			var world;
@@ -241,9 +241,12 @@ and open the template in the editor.
 
 				generateBalls(workerConfig.getNumOfBall());
 				// Create contact material behaviour
-				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.0, restitution: 9 } );
-
+				var ballGroundContact = new CANNON.ContactMaterial( groundMaterial, ballMaterial, { friction: 0.3, restitution: 4 } );
 				world.addContactMaterial(ballGroundContact);
+
+				var ballballContact = new CANNON.ContactMaterial( ballMaterial, ballMaterial, { friction: 0.0, restitution: 1 } );
+				world.addContactMaterial(ballGroundContact);
+
 				window.addEventListener( 'resize', onWindowResize, false );
 				document.addEventListener( 'keydown', onKeyDown, false);
 				document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
@@ -330,7 +333,7 @@ and open the template in the editor.
 			}
 
 			function animate( timestamp ) {
-				world.step( dt ); // Update the phyics world.
+				world.step(dt); // Update the phyics world.
 				updateVisuals();
 				controls.update();
 
@@ -414,7 +417,7 @@ and open the template in the editor.
 					visuals.push( mesh );
 
 					var ballBody = new CANNON.Body( {
-						mass: mass,
+						mass: ballMass,
 						material: ballMaterial,
 						position: new CANNON.Vec3(randX, randZ)
 					});
@@ -440,12 +443,12 @@ and open the template in the editor.
 				var mat = new CANNON.Material();
 				projector.unprojectVector(shootDirection, camera);
 				var sphereBody = new CANNON.Body( {
-					mass: mass,
+					mass: ballMass,
 					material: mat,
 					position: new CANNON.Vec3( 3 * size, size, ballHeight )
 				});
 				var mat_mat = new CANNON.ContactMaterial(mat, mat, {
-				  friction: 0.3,
+				  friction: 0.5,
 				  restitution: 5
 				});
 				var mat_ground = new CANNON.ContactMaterial(groundMaterial, mat, { friction: 0.0, restitution: 5 });
