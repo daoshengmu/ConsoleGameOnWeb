@@ -18,7 +18,6 @@ onmessage = function(evt) {
 
 		console.log( 'import script... ' );
 		importScripts("../lib/three.js");
-		importScripts("../lib/cannon.min.js");
 		importScripts("../js/threejs/VREffect.js");
 
 		// Init three.js render world.
