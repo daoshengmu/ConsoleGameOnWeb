@@ -17,8 +17,9 @@ onmessage = function(evt) {
 	if (!bInit && typeof evt.data.canvas !== 'undefined') {
 
 		console.log( 'import script... ' );
-		importScripts("../lib/three.js");
-		importScripts("../js/threejs/VREffect.js");
+		importScripts('../lib/three.js');
+		importScripts('../js/threejs/VREffect.js');
+		importScripts('../js/threejs/TGALoader.js');
 
 		// Init three.js render world.
 		canvas = evt.data.canvas;
@@ -196,9 +197,9 @@ onmessage = function(evt) {
 }
 
 function generateBalls(num) {
-
-	var materialColor = 0xdddddd;
-	var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
+	var loader = new THREE.TGALoader();
+	var texture = loader.load( '../images/brick_bump.tga' );
+	var solidMaterial = new THREE.MeshLambertMaterial( { map: texture } );
 	var radius = 1;
 	var size = radius;
 

@@ -25,6 +25,7 @@ and open the template in the editor.
 		<script src="lib/three.js"></script>
 		<script src="lib/threejs/TrackballControls.js"></script>
 		<script src="js/threejs/VREffect.js"></script>
+		<script src="js/threejs//TGALoader.js"></script>
 		<script src="lib/stats.min.js"></script>
 		<script src="lib/dat.gui.min.js"></script>
 		<script src="js/gui.js"></script>
@@ -389,8 +390,9 @@ and open the template in the editor.
 			}
 
 			function generateBalls(num) {
-				var materialColor = 0xdddddd;
-				var solidMaterial = new THREE.MeshLambertMaterial( { color: materialColor } );
+				var loader = new THREE.TGALoader();
+				var texture = loader.load( 'images/brick_bump.tga' );
+				var solidMaterial = new THREE.MeshLambertMaterial( { map: texture } );
 				var radius = 1;
 				var size = radius;
 
