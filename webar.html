@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<!-- 
+Web AR experiment
+author: daoshengmu, http://dsmu.me
+date: 01/24/2016
+-->
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link href="css/style.css" rel="stylesheet">
+        <script src="lib/three.min.js"></script>
+        <script src="js/threejs/collada/Animation.js"></script>
+        <script src="js/threejs/collada/AnimationHandler.js"></script>
+        <script src="js/threejs/collada/KeyFrameAnimation.js"></script>
+        <script src="js/threejs/ColladaLoader.js"></script>
+        <title>Web AR Demo</title>
+    </head>
+    <body>
+        <p id="message" style="display: none">Ready!</p>
+        <video style="display: none;" id="monitor" autoplay="autoplay"></video>
+        <canvas height="240" style="display: none;" width="320" id="photo"></canvas>
+        <div id="container" style="display: block; position: absolute; left: 0px; top: 0px;"></div>
+        <script type="text/javascript">
+            var fKeyCode, lat, lon, renderer, camera;
+            var video = document.getElementById('monitor');
+            var message = document.getElementById( 'message' );
+            var canvas = document.getElementById('photo');
+            var context = canvas.getContext( '2d' );
+            var clock = new THREE.Clock();
+            var isUserInteracting = false;
+
+            init();
+
+            function init() {
+
+                var container, mesh;
+
+                navigator.getUserMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
+
+                if (navigator.getUserMedia) {
+                    navigator.getUserMedia( { 'video': true }, gotStream, noStream);
+                }
+
+                window.addEventListener( 'resize', onWindowResize, false );
+                document.addEventListener( 'keydown', onKeyDown, false);
+                document.addEventListener( 'webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function( event ) {
+                    onFullscreenChanged( event );
+                });
+
+                document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+                document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );	
+                document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false);	
+
+                gameLoop();
+            }
+
+            function gotStream( stream ) {
+                message.textContent = 'Connected to stream. Starting decoding...';
+                
+                if( typeof webkitURL !== 'undefined' && webkitURL.createObjectURL ) {
+                    video.src = webkitURL.createObjectURL( stream );
+                    start();
+                } else if( window.URL ) {
+                    video.src = window.URL.createObjectURL( stream );
+                } else {
+                    video.src = stream;
+                }
+                
+                video.onerror = function () {
+                    stream.stop();
+                    streamError();
+                };
+
+                video.onloadedmetadata = function(e) {
+                    start();
+                }
+            }
+
+            function noStream() {
+                message.innerHTML = '<span class="error">No camera available.</span> Please allow the page access to your camera.';
+            }
+
+            function streamError() {
+                message.innerHTML = '<span class="error">Camera error.</span> Something went very wrong :(';
+            }
+
+            function start() {
+                message.textContent = 'Ready!';
+                //instructions.style.display = 'block';
+                // document.getElementById('app').hidden = false;
+                //oCanvas.style.display = 'block';
+                //video.style.display = 'none';
+                canvas.style.display = 'block';
+                startTime = Date.now();
+                updateVideoStream();
+
+                initWebGL();
+            }
+
+            function updateVideoStream() {
+                onWindowResize();
+                context.drawImage( video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height );
+                if( canvas.width > 0 && canvas.height > 0 ) {
+                    context.drawImage( canvas, 0, 0 );
+                }
+            }
+
+            function initWebGL() {
+                container = document.getElementById('container');
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1100);
+
+                camera.target = new THREE.Vector3(0, 0, 0);
+                camera.position.set( 0, 0, 15 );
+
+                scene = new THREE.Scene();
+                renderer = new THREE.WebGLRenderer( { alpha: true } );
+                // In order to support v.69, I comment this line. When we are ready to v.71, we can enable it. 
+                //renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setClearColor( 0x000000, 0.0);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+                container.appendChild( renderer.domElement );
+                scene.add( new THREE.AmbientLight( 0xcccccc ) );
+
+                // Load collada model
+                var loader = new THREE.ColladaLoader();
+                loader.options.convertUpAxis = true;
+                loader.load( 'models/monster/monster.dae', function ( collada ) {
+
+                dae = collada.scene;
+                dae.traverse( function ( child ) {
+                    if ( child instanceof THREE.SkinnedMesh ) {
+                        var animation = new THREE.Animation( child, child.geometry.animation );
+                        animation.play();
+                    }
+                } );
+
+                dae.scale.x = dae.scale.y = dae.scale.z = 0.004;
+                dae.position.y -= 5;
+                dae.rotation.y -= 90;
+                dae.updateMatrix();
+
+                scene.add( dae );
+            } );
+            }
+
+            window.addEventListener("load", function() {
+               
+            }, false);
+
+            function onKeyDown(event) {
+                var key = event.keyCode || event.which;
+
+                if (key == fKeyCode) {
+                    triggerFullscreen();
+                }
+            }
+
+            function onWindowResize() {
+
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+
+                if (camera) {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                }
+
+                if (renderer) {
+                    renderer.setSize( window.innerWidth, window.innerHeight );
+                }
+            }
+
+            function onFullscreenChanged( event ) {
+
+                if ( document.fullscreenEnabled ) {
+                    document.fullscreenElement;
+                }                
+            }
+
+            function triggerFullscreen() {
+
+                // bFullScreen = !bFullScreen;
+                // toggle fullscreen
+                if ( !document.fullscreenElement
+                    && !document.mozFullScreenElement 
+                    && !document.webkitFullscreenElement 
+                    && !document.msFullscreenElement ) {  // current working methods
+
+                    if ( document.documentElement.requestFullscreen ) {
+                        document.documentElement.requestFullscreen();
+                    } else if ( document.documentElement.msRequestFullscreen ) {
+                        document.documentElement.msRequestFullscreen();
+                    } else if ( document.documentElement.mozRequestFullScreen ) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if ( document.documentElement.webkitRequestFullscreen ) {
+                        document.documentElement.webkitRequestFullscreen( Element.ALLOW_KEYBOARD_INPUT );
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                      document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                      document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                      document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                      document.webkitExitFullscreen();
+                    }
+
+                    onWindowResize();
+                }
+            }
+
+            function onDocumentMouseDown( event ) {
+
+                //event.preventDefault(); // --- this will cause dat.GUI not work.
+
+                isUserInteracting = true;
+
+                onMouseDownMouseX = event.clientX;
+                onMouseDownMouseY = event.clientY;
+
+                onMouseDownLon = lon;
+                onMouseDownLat = lat;
+            }
+
+            function onDocumentMouseMove( event ) {
+
+                if ( isUserInteracting === true ) {
+                    lon = ( onMouseDownMouseX - event.clientX ) * 0.1 + onMouseDownLon;
+                    lat = ( event.clientY - onMouseDownMouseY ) * 0.1 + onMouseDownLat;
+                }
+            }
+
+            function onDocumentMouseUp( event ) {
+
+                isUserInteracting = false;
+            }
+
+            function onDocumentMouseWheel( event ) {
+                // WebKit
+                if ( event.wheelDeltaY ) {
+                    camera.fov -= event.wheelDeltaY * 0.05;
+                // Opera / Explorer 9
+                } else if ( event.wheelDelta ) {
+                    camera.fov -= event.wheelDelta * 0.05;
+                // Firefox
+                } else if ( event.detail ) {
+                    camera.fov += event.detail * 1.0;
+                }
+
+                camera.updateProjectionMatrix();
+            }
+
+            function gameLoop() {
+
+                requestAnimationFrame( gameLoop );
+                updateVideoStream();
+                //camera.lookAt( camera.target );
+
+                THREE.AnimationHandler.update( clock.getDelta() );
+
+                if (renderer) {
+                    renderer.render( scene, camera );
+                }
+
+            }
+
+	</script>	
+    </body>
+</html>
