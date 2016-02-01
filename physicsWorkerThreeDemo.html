@@ -325,7 +325,7 @@ and open the template in the editor.
 					worker.onmessage = function( evt ) {
 						//console.log('Message received from worker ' + evt.data );
 
-						if (evt.data.positions && evt.data.quaternions
+						if ( evt.data.positions && evt.data.quaternions
 							&& evt.data.cameraState ) {
 							positions = evt.data.positions;
 							quaternions = evt.data.quaternions;
