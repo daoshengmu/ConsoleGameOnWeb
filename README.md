@@ -40,7 +40,7 @@ For mobile users, Firefox for Android now also supports WebVR in Nightly builds.
 Navigator getVRDevices, https://dxr.mozilla.org/mozilla-central/source/dom/webidl/Navigator.webidl#337
 
 # WebGL on Worker
-OffscreenCanvas
+OffscreenCanvas, 
 https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
 
 ## Downloads
