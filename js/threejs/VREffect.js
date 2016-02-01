@@ -15,13 +15,6 @@ THREE.VREffect = function ( renderer, onError ) {
 	var eyeTranslationL, eyeFOVL;
 	var eyeTranslationR, eyeFOVR;
 
-	this.eyeTranslationL = {};
-	this.eyeFOVL = {};
-	this.eyeTranslationR = {};
-	this.eyeFOVR = {};
-
-	console.log( 'Enter VREffect... ' );
-
 	function gotVRDevices( devices ) {
 
 		for ( var i = 0; i < devices.length; i ++ ) {
@@ -88,12 +81,11 @@ THREE.VREffect = function ( renderer, onError ) {
 	var canvas = renderer.domElement;
 	var fullscreenchange = canvas.mozRequestFullScreen ? 'mozfullscreenchange' : 'webkitfullscreenchange';
 
-	// Worker thread can't use dom API.
-	// document.addEventListener( fullscreenchange, function ( event ) {
+	document.addEventListener( fullscreenchange, function ( event ) {
 
-	// 	isFullscreen = document.mozFullScreenElement || document.webkitFullscreenElement;
+		isFullscreen = document.mozFullScreenElement || document.webkitFullscreenElement;
 
-	// }, false );
+	}, false );
 
 	this.setFullScreen = function ( boolean ) {
 
@@ -129,72 +121,6 @@ THREE.VREffect = function ( renderer, onError ) {
 
 	var cameraL = new THREE.PerspectiveCamera();
 	var cameraR = new THREE.PerspectiveCamera();
-
-	this.renderWorker = function ( scene, camera ) {
-
-	//	if ( vrHMD ) {
-
-			var sceneL, sceneR;
-
-			if ( Array.isArray( scene ) ) {
-
-				sceneL = scene[ 0 ];
-				sceneR = scene[ 1 ];
-
-			} else {
-
-				sceneL = scene;
-				sceneR = scene;
-
-			}
-
-			// var size = renderer.getSize(); // only support for three.js 71
-			var rendererWidth = renderer.domElement.width;
-			var rendererHeight = renderer.domElement.height;
-
-			var size = {
-				width: rendererWidth,
-				height: rendererHeight
-			};
-			size.width /= 2;
-
-			renderer.enableScissorTest( true );
-			renderer.clear();
-
-			if ( camera.parent === undefined ) camera.updateMatrixWorld();
-
-			cameraL.projectionMatrix = fovToProjection( this.eyeFOVL, true, camera.near, camera.far );
-			cameraR.projectionMatrix = fovToProjection( this.eyeFOVR, true, camera.near, camera.far );
-
-			camera.matrixWorld.decompose( cameraL.position, cameraL.quaternion, cameraL.scale );
-			camera.matrixWorld.decompose( cameraR.position, cameraR.quaternion, cameraR.scale );
-
-			cameraL.translateX( this.eyeTranslationL.x * this.scale );
-			cameraR.translateX( this.eyeTranslationR.x  * this.scale );
-
-			// render left eye
-			renderer.setViewport( 0, 0, size.width, size.height );
-			renderer.setScissor( 0, 0, size.width, size.height );
-			renderer.render( sceneL, cameraL );
-
-			// render right eye
-			renderer.setViewport( size.width, 0, size.width, size.height );
-			renderer.setScissor( size.width, 0, size.width, size.height );
-			renderer.render( sceneR, cameraR );
-
-			renderer.enableScissorTest( false );
-
-			return;
-
-		//}
-
-		// Regular render mode if not HMD
-
-		// if ( Array.isArray( scene ) ) scene = scene[ 0 ];
-
-		// renderer.render( scene, camera );
-
-	};
 
 	this.render = function ( scene, camera ) {
 
