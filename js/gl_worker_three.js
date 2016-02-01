@@ -18,7 +18,7 @@ onmessage = function(evt) {
 
 		console.log( 'import script... ' );
 		importScripts('../lib/three.js');
-		importScripts('../js/threejs/VREffect.js');
+		importScripts('../js/threejs/VREffectWorker.js');
 		importScripts('../js/threejs/TGALoader.js');
 
 		// Init three.js render world.
@@ -32,7 +32,7 @@ onmessage = function(evt) {
 		renderer.shadowMapSoft = true;
 
 		// VR setup
-		vrDeviceEffect = new THREE.VREffect(renderer);
+		vrDeviceEffect = new THREE.VREffectWorker(renderer);
 
 		scene = new THREE.Scene();
 		camera = new THREE.PerspectiveCamera( 30, canvas.width / canvas.height, 0.5, 10000 );
@@ -233,7 +233,7 @@ function render() {
 		renderer.render( scene, camera );	
 	}
 	else {
-		vrDeviceEffect.renderWorker(scene, camera);
+		vrDeviceEffect.render(scene, camera);
 	}
 
 	renderer.context.commit();
