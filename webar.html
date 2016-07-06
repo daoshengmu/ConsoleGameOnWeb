@@ -10,17 +10,21 @@ date: 01/24/2016
     <head>
         <meta charset="utf-8">
         <link href="css/style.css" rel="stylesheet">
-        <script src="lib/three.min.js"></script>
+        <script src="lib/three.js"></script>
         <script src="js/threejs/collada/Animation.js"></script>
         <script src="js/threejs/collada/AnimationHandler.js"></script>
         <script src="js/threejs/collada/KeyFrameAnimation.js"></script>
         <script src="js/threejs/ColladaLoader.js"></script>
+        <script src="js/js-aruco/cv.js"></script>
+        <script src="js/js-aruco/aruco.js"></script>
+        <script src="js/js-aruco/svd.js"></script>
+        <script src="js/js-aruco/posit1.js"></script>
         <title>Web AR Demo</title>
     </head>
     <body>
         <p id="message" style="display: none">Ready!</p>
         <video style="display: none;" id="monitor" autoplay="autoplay"></video>
-        <canvas height="240" style="display: none;" width="320" id="photo"></canvas>
+        <canvas height="480" width="640" id="photo"></canvas>
         <div id="container" style="display: block; position: absolute; left: 0px; top: 0px;"></div>
         <script type="text/javascript">
             var fKeyCode, lat, lon, renderer, camera;
@@ -30,6 +34,9 @@ date: 01/24/2016
             var context = canvas.getContext( '2d' );
             var clock = new THREE.Clock();
             var isUserInteracting = false;
+            var arDetector = null, arPos = null;
+            var modelSize = 0.012; //millimeters
+            var image, dae;
 
             init();
 
@@ -58,6 +65,8 @@ date: 01/24/2016
                 document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );	
                 document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false);	
 
+                image = new Image();
+                image.src = "images/qr101.jpg";
                 gameLoop();
             }
 
@@ -73,6 +82,8 @@ date: 01/24/2016
                     video.src = stream;
                 }
                 
+                setupAR();
+
                 video.onerror = function () {
                     stream.stop();
                     streamError();
@@ -91,25 +102,18 @@ date: 01/24/2016
                 message.innerHTML = '<span class="error">Camera error.</span> Something went very wrong :(';
             }
 
-            function start() {
-                message.textContent = 'Ready!';
-                //instructions.style.display = 'block';
-                // document.getElementById('app').hidden = false;
-                //oCanvas.style.display = 'block';
-                //video.style.display = 'none';
-                canvas.style.display = 'block';
-                startTime = Date.now();
-                updateVideoStream();
-
-                initWebGL();
+            function setupAR() {
+                arDetector = new AR.Detector();
+                arPos = new POS.Posit(modelSize, canvas.width);
             }
 
-            function updateVideoStream() {
+            function start() {
+                message.textContent = 'Ready!';
+                canvas.style.display = 'block';
+                startTime = Date.now();
+                initWebGL();
                 onWindowResize();
-                context.drawImage( video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height );
-                if( canvas.width > 0 && canvas.height > 0 ) {
-                    context.drawImage( canvas, 0, 0 );
-                }
+                updateVideoStream();
             }
 
             function initWebGL() {
@@ -134,21 +138,22 @@ date: 01/24/2016
                 loader.options.convertUpAxis = true;
                 loader.load( 'models/monster/monster.dae', function ( collada ) {
 
-                dae = collada.scene;
-                dae.traverse( function ( child ) {
-                    if ( child instanceof THREE.SkinnedMesh ) {
-                        var animation = new THREE.Animation( child, child.geometry.animation );
-                        animation.play();
-                    }
+                    dae = collada.scene;
+                    dae.traverse( function ( child ) {
+                        if ( child instanceof THREE.SkinnedMesh ) {
+                            var animation = new THREE.Animation( child, child.geometry.animation );
+                            animation.play();
+                        }
+                    } );
+
+                    dae.scale.x = dae.scale.y = dae.scale.z = 0.004;
+                    dae.position.y -= 5;
+                    dae.rotation.y -= 90;
+                    dae.updateMatrix();
+
+                    scene.add( dae );
+                    dae.visible = false;
                 } );
-
-                dae.scale.x = dae.scale.y = dae.scale.z = 0.004;
-                dae.position.y -= 5;
-                dae.rotation.y -= 90;
-                dae.updateMatrix();
-
-                scene.add( dae );
-            } );
             }
 
             window.addEventListener("load", function() {
@@ -186,8 +191,6 @@ date: 01/24/2016
             }
 
             function triggerFullscreen() {
-
-                // bFullScreen = !bFullScreen;
                 // toggle fullscreen
                 if ( !document.fullscreenElement
                     && !document.mozFullScreenElement 
@@ -259,11 +262,114 @@ date: 01/24/2016
                 camera.updateProjectionMatrix();
             }
 
-            function gameLoop() {
 
+            function updateVideoStream() {     
+
+                if (video.readyState === video.HAVE_ENOUGH_DATA){
+                    context.drawImage( video, 0, 0, canvas.width, canvas.height );
+
+                    var imageData = context.getImageData( 0, 0, canvas.width, canvas.height );
+                    var markers = arDetector.detect( imageData );
+
+                    drawCorners( markers );
+                    drawId( markers );
+                    updatePose( markers );
+                }
+            }
+
+            function drawCorners( markers ) {
+                var corners, corner, i, j;
+    
+                context.lineWidth = 3;
+
+                for ( i = 0; i < markers.length; ++ i ){
+                    console.log("get AR QR code...");
+                    corners = markers[i].corners;
+                    
+                    context.strokeStyle = "red";
+                    context.beginPath();
+                     
+                    for ( j = 0; j < corners.length; ++ j ){
+                      corner = corners[j];
+                      context.moveTo(corner.x, corner.y);
+                      corner = corners[(j + 1) % corners.length];
+                      context.lineTo(corner.x, corner.y);
+                    }
+                    context.stroke();
+                    context.closePath();
+                    
+                    context.strokeStyle = "green";
+                    context.strokeRect(corners[0].x - 2, corners[0].y - 2, 4, 4);
+                }
+            }
+
+            function drawId( markers ) {
+                 var corners, corner, x, y, i, j;
+      
+                context.strokeStyle = "blue";
+                context.lineWidth = 1;
+
+                for (i = 0; i !== markers.length; ++ i){
+                    corners = markers[i].corners;
+
+                    x = Infinity;
+                    y = Infinity;
+
+                    for (j = 0; j !== corners.length; ++ j){
+                      corner = corners[j];
+                      
+                      x = Math.min(x, corner.x);
+                      y = Math.min(y, corner.y);
+                    }
+                    context.strokeText(markers[i].id, x, y)
+                }
+            }
+
+            function updatePose( markers ) {
+                var corners, corner, i, j, pose;
+
+                // We are just interested in the only one marker.
+                // This demo is not for mutliple marker right now.
+                if ( markers.length > 0 ) {
+                    console.log("get AR QR code...");
+                    corners = markers[0].corners;
+
+                    for (i = 0; i < corners.length; ++ i){
+                      corner = corners[i];
+                      
+                      // to 2D canvas space to 3D world space
+                      corner.x = corner.x - (canvas.width / 2);
+                      corner.y = (canvas.height/2) - corner.y;
+                    }
+
+                    pose = arPos.pose( corners );
+
+                    // Update object
+                    var rotation = pose.bestRotation;
+                    var translation = pose.bestTranslation;
+
+                    if ( dae ) {
+                        const offsetScale = 0.25;
+                        
+                        dae.visible = true;
+                        dae.rotation.x = -Math.asin(-rotation[1][2]);
+                        dae.rotation.y = -Math.atan2(rotation[0][2], rotation[2][2]) - 90;
+                        dae.rotation.z = Math.atan2(rotation[1][0], rotation[1][1]);
+                        dae.position.x = translation[0];
+                        dae.position.y = translation[1];
+                        dae.position.z = -translation[2] * offsetScale;
+                    }
+
+                } else {
+                    if ( dae ) {
+                        dae.visible = false;
+                    }
+                }
+            }
+
+            function gameLoop() {
                 requestAnimationFrame( gameLoop );
                 updateVideoStream();
-                //camera.lookAt( camera.target );
 
                 THREE.AnimationHandler.update( clock.getDelta() );
 
