@@ -35,7 +35,7 @@ date: 01/24/2016
             var clock = new THREE.Clock();
             var isUserInteracting = false;
             var arDetector = null, arPos = null;
-            var modelSize = 0.012; //millimeters
+            var modelSize = 3; //millimeters
             var image, dae;
 
             init();
@@ -349,9 +349,10 @@ date: 01/24/2016
                     var translation = pose.bestTranslation;
 
                     if ( dae ) {
+                        const scaleSize = 0.004;
                         const offsetScale = 0.25;
-                        
                         dae.visible = true;
+                        dae.scale.x = dae.scale.y = dae.scale.z = scaleSize;
                         dae.rotation.x = -Math.asin(-rotation[1][2]);
                         dae.rotation.y = -Math.atan2(rotation[0][2], rotation[2][2]) - 90;
                         dae.rotation.z = Math.atan2(rotation[1][0], rotation[1][1]);
