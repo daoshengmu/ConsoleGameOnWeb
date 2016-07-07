@@ -52,6 +52,17 @@ https://nightly.mozilla.org
 ### Enable offscreencanvas
 Enter about:config on your url bar and set ```gfx.offscreencanvas.enabled``` to true
 
+# AR on Web browser
+This is inspired by [Jerome Etienne's slides](http://jeromeetienne.github.io/slides/augmentedrealitywiththreejs/), and it is based on [three.js](https://github.com/mrdoob/three.js/) and [js-aruco](https://github.com/jcmellado/js-aruco)
+
+### How to use
+Print this marker
+
+![alt text](https://camo.githubusercontent.com/f55430b914e27388021304f4741f39285158b4bb/687474703a2f2f7777772e696e6d656e7369612e636f6d2f66696c65732f70696374757265732f65787465726e616c2f313030312e706e67 "the marker")
+
+at a white paper.
+
+This demo will catch the marker and show a monster on it.
 
 
 
