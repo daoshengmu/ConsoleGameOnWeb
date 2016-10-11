@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<!-- 
+Web Gamepad API experiment of VR controller 
+author: daoshengmu, http://dsmu.me
+date: 10/08/2016
+-->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<link href="css/style.css" rel="stylesheet">
+		<link href="css/sweetalert.css" rel="stylesheet" type="text/css" >
+		<style>
+			body {
+				background-color: #ffffff;
+			}
+		</style>
+		<script src="lib/jquery-1.11.2.min.js"></script>
+		<script src="lib/sweetalert.min.js"></script> 
+		<title>Web Gamepad Demo</title>
+	</head>
+	<body>
+		<div id="textDiv">
+			<h2 id="gamepadTxt">Welcome to Web VR controller Demo.<h2>
+		</div>
+		<div id="mainDiv">
+		  <div id="vrControllerDiv">	
+        <canvas id="webgl-canvas"></canvas>
+				<!-- <img class="imgDiv" src="images/xbox_360_controller.png">				
+				<div id="highlightButtonBallDiv"></div>
+				<div id="highlightAxisBallDiv"></div> -->
+			</div>
+		</div>
+		<script type="text/javascript">
+
+			var rAF = window.requestAnimationFrame ||
+			  window.mozRequestAnimationFrame ||
+			  window.webkitRequestAnimationFrame;
+
+			var rAFStop = window.cancelRequestAnimationFrame ||
+			  window.mozCancelRequestAnimationFrame ||
+			  window.webkitCancelRequestAnimationFrame;
+
+			var start;
+			var mainGamePadIndex = -1;
+			var OSType;
+      var gl = null;
+      var vrDisplay = null;
+
+			// Axis definitions
+			const Axis = {
+				'leftTriggerRelease' : 5,
+				'rightTriggerRelease' : 11
+			};
+
+			var gamepadItems = {
+
+				"Windows": {
+					buttonPos: [
+						{'x': '52%', 'y': '28%'}, // A
+						{'x': '57%', 'y': '18%'}, // B
+						{'x': '47%', 'y': '18%'}, // X
+						{'x': '52%', 'y': '8%'},  // Y
+						{'x': '12%', 'y': '-2%'}, // left bumper
+						{'x': '52%', 'y': '-2%'}, // right bumper
+						{'x': '10%', 'y': '-2%'}, // left trigger
+						{'x': '55%', 'y': '-2%'}, // right trigger
+						{'x': '25%', 'y': '20%'}, // back left
+						{'x': '40%', 'y': '20%'}, // back right
+						{'x': '12%', 'y': '17%'}, // left stick
+						{'x': '42%', 'y': '39%'}, // right stick
+						{'x': '22%', 'y': '28%'}, // d-pad up
+						{'x': '22%', 'y': '50%'}, // d-pad down
+						{'x': '18%', 'y': '39%'}, // d-pad left
+						{'x': '26%', 'y': '39%'}, // d-pad right
+						{'x': '33%', 'y': '18%'} // xbox
+
+					],
+
+					axisPos: [
+						{'x': '17%', 'y': '16%'}, // left stick - right
+						{'x': '9%', 'y': '16%'},  // left stick - left
+						{'x': '13%', 'y': '25%'}, // left stick - down
+						{'x': '13%', 'y': '8%'},  // left stick - up
+						{'x': '46%', 'y': '39%'}, // right stick - right
+						{'x': '40%', 'y': '39%'}, // right stick - left
+						{'x': '43%', 'y': '45%'}, // right stick - down
+						{'x': '43%', 'y': '34%'}  // right stick - up
+					]
+				},
+
+				"MacOS": {
+					buttonPos: [
+						{'x': '22%', 'y': '28%'}, // d-pad up
+						{'x': '22%', 'y': '50%'}, // d-pad down
+						{'x': '18%', 'y': '39%'}, // d-pad left
+						{'x': '26%', 'y': '39%'}, // d-pad right
+						{'x': '40%', 'y': '20%'}, // back right
+						{'x': '25%', 'y': '20%'}, // back left
+						{'x': '12%', 'y': '17%'}, // left stick
+						{'x': '42%', 'y': '39%'}, // right stick
+						{'x': '12%', 'y': '-2%'}, // left bumper
+						{'x': '52%', 'y': '-2%'}, // right bumper
+						{'x': '33%', 'y': '18%'}, // xbox
+						{'x': '52%', 'y': '28%'}, // A
+						{'x': '57%', 'y': '18%'}, // B
+						{'x': '47%', 'y': '18%'}, // X
+						{'x': '52%', 'y': '8%'}   // Y
+					],
+
+					axisPos: [
+						{'x': '17%', 'y': '16%'}, // left stick - right
+						{'x': '9%', 'y': '16%'},  // left stick - left
+						{'x': '13%', 'y': '25%'}, // left stick - down
+						{'x': '13%', 'y': '8%'},  // left stick - up
+						{'x': '10%', 'y': '-2%'}, // left trigger - press
+						{'x': '10%', 'y': '-2%'}, // left trigger - release
+						{'x': '46%', 'y': '39%'}, // right stick - right
+						{'x': '40%', 'y': '39%'}, // right stick - left
+						{'x': '43%', 'y': '45%'}, // right stick - down
+						{'x': '43%', 'y': '34%'}, // right stick - up
+						{'x': '55%', 'y': '-2%'}, // right trigger - press
+						{'x': '55%', 'y': '-2%'}, // right trigger - release
+					]
+				}
+			}
+
+			window.addEventListener("gamepadconnected", function(e) {
+
+				swal({ title: "Gamepad connected!",   text: "I will close in 3 seconds.",  
+					type: "success", timer: 3000,   showConfirmButton: false });
+
+			  	console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+			    e.gamepad.index, e.gamepad.id,
+			    e.gamepad.buttons.length, e.gamepad.axes.length);
+
+			  	if ( e.gamepad.index == 0 )
+			  		mainGamePadIndex = e.gamepad.index;
+
+			  	if ( e.gamepad.index > 0 )
+			  		alert("We just support one gamepad currently.");
+
+			  	var txt = 'Gamepad connected at index ' + e.gamepad.index 
+				+ ': ' + e.gamepad.id + '. --- ' + e.gamepad.buttons.length +
+				' buttons, ' + e.gamepad.axes.length +' axes.';
+
+				var div = $('#gamepadTxt')[0];
+				div.textContent = txt;
+
+				detectOSType();
+				gameLoop();
+
+			});
+
+			window.addEventListener("gamepaddisconnected", function(e) {
+
+				swal({ title: "Gamepad disconnected!",   text: "I will close in 3 seconds.", type: "warning", timer: 3000, showConfirmButton: false });
+
+				console.log("Gamepad disconnected from index %d: %s"
+					, e.gamepad.index, e.gamepad.id);
+
+				var txt = 'Gamepad disconnected at index ' + e.gamepad.index 
+				+ ': ' + e.gamepad.id;
+
+				var div = $('#gamepadTxt')[0];
+				div.textContent = txt;
+
+				rAFStop(start);
+			});
+
+			function detectOSType() {
+
+				if ( navigator.appVersion.indexOf("Win") != -1 ) {
+					OSType = "Windows";
+				} else if ( navigator.appVersion.indexOf("Mac") != -1 ) {
+					OSType = "MacOS";
+				} else if ( navigator.appVersion.indexOf("X11") != -1 ) {
+					OSType = "UNIX";
+				} else if ( navigator.appVersion.indexOf("Linux") != -1 ) {
+					OSType = "Linux";
+				} else {
+					alert("Unknown OS type.");
+				}
+			}
+
+      function init() {
+
+        if (navigator.getVRDisplays) {
+          navigator.getVRDisplays().then(function (displays) {
+            if (displays.length > 0) {
+              vrDisplay = displays[0];
+              vrDisplay.depthNear = 0.1;
+              vrDisplay.depthFar = 1024.0;
+              initWebGL(true);
+              if (vrDisplay.stageParameters &&
+                  vrDisplay.stageParameters.sizeX > 0 &&
+                  vrDisplay.stageParameters.sizeZ > 0) {
+                // cubeIsland.resize(vrDisplay.stageParameters.sizeX, vrDisplay.stageParameters.sizeZ);
+              }
+              // VRSamplesUtil.addButton("Reset Pose", "R", null, function () { vrDisplay.resetPose(); });
+              // if (vrDisplay.capabilities.canPresent)
+              //   // vrPresentButton = VRSamplesUtil.addButton("Enter VR", "E", "media/icons/cardboard64.png", onVRRequestPresent);
+              // window.addEventListener('vrdisplaypresentchange', onVRPresentChange, false);
+              // window.addEventListener('vrdisplayactivate', onVRRequestPresent, false);
+              // window.addEventListener('vrdisplaydeactivate', onVRExitPresent, false);
+            } else {
+              initWebGL(false);
+              VRSamplesUtil.addInfo("WebVR supported, but no VRDisplays found.", 3000);
+            }
+          });
+        } else if (navigator.getVRDevices) {
+          initWebGL(false);
+          VRSamplesUtil.addError("Your browser supports WebVR but not the latest version. See <a href='http://webvr.info'>webvr.info</a> for more info.");
+        } else {
+          initWebGL(false);
+          VRSamplesUtil.addError("Your browser does not support WebVR. See <a href='http://webvr.info'>webvr.info</a> for assistance.");
+        }
+      }
+
+      function initWebGL(preserveDrawingBuffer) {
+        var webglCanvas = document.getElementById("webgl-canvas");
+
+        var glAttribs = {
+          antialias: false,
+          preserveDrawingBuffer: preserveDrawingBuffer
+        };
+
+        gl = webglCanvas.getContext("webgl", glAttribs);
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+
+        window.addEventListener("resize", onResize, false);
+        onResize();
+        animate();
+      }
+
+      function onWindowResize() {
+
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        if (vrDisplay) {
+          var vrGamepads = [];
+          var gamepads = navigator.getGamepads();
+
+          for (var i = 0; i < gamepads.length; ++i) {
+
+            console.log("I have a gamepad...");
+          }
+        }
+      }
+
+			function buttonPressed(btn, index) {
+
+				if ( typeof(btn) == "object" ) {
+
+					var gamepad = gamepadItems[OSType];
+
+					if ( !gamepad )
+						return;
+
+					var buttonPos = gamepad.buttonPos;
+
+					if ( btn.pressed || btn.value ) {
+
+						console.log("You press buttion " + index);
+						var btnBallElement = $('#highlightButtonBallDiv')[0];	
+						var pos = buttonPos[index];
+						btnBallElement.style.left = pos.x;
+						btnBallElement.style.top = pos.y;
+						btnBallElement.style.display = 'block';
+					}
+					
+				}
+			}
+
+			function axisPressed(axis, posIndex, negIndex) {
+				 
+				var gamepad = gamepadItems[OSType];
+
+				if ( !gamepad )
+					return;
+
+				var axisPos = gamepad.axisPos;
+
+			 	var axisBallElement = $('#highlightAxisBallDiv')[0];	
+ 
+			 	if ( Math.round( axis ) == 1 ) {
+
+					console.log("You press axis " + posIndex);
+					var pos = axisPos[posIndex];
+					axisBallElement.style.left = pos.x;
+					axisBallElement.style.top = pos.y;
+					axisBallElement.style.display = 'block';
+
+			    } else if ( Math.round( axis ) == -1 ) {
+
+			    	if(  ( OSType == "MacOS" ) && 
+			    		( negIndex == Axis.leftTriggerRelease 
+			    		|| negIndex == Axis.rightTriggerRelease ) )
+			    		return;
+
+					console.log("You press axis " + negIndex);
+					var pos = axisPos[negIndex];
+					axisBallElement.style.left = pos.x;
+					axisBallElement.style.top = pos.y;
+					axisBallElement.style.display = 'block';
+			    }
+			}
+
+			function gameLoop() {
+
+				var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+				
+				if ( !gamepads ) {
+				    return;
+				}
+
+				// Disable highlight
+				var btnBallElement = $('#highlightButtonBallDiv')[0];
+				btnBallElement.style.display = 'none';
+
+				var axisBallElement = $('#highlightAxisBallDiv')[0];
+				axisBallElement.style.display = 'none';
+				// end of disable
+
+				var gp = gamepads[mainGamePadIndex];
+
+				for ( var i = 0; i < gp.buttons.length; ++i ) {
+
+					buttonPressed(gp.buttons[i], i);
+				}
+
+				for ( var i = 0; i < gp.axes.length; ++i ) {
+
+					axisPressed(gp.axes[i], i*2, (i*2)+1);
+				}
+
+				start = rAF(gameLoop);
+			}
+
+		</script>	
+	</body>
+</html>
