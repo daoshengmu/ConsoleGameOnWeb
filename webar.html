@@ -36,7 +36,7 @@ date: 01/24/2016
             var isUserInteracting = false;
             var arDetector = null, arPos = null;
             var modelSize = 3; //millimeters
-            var image, dae;
+            var dae;
 
             init();
 
@@ -65,8 +65,6 @@ date: 01/24/2016
                 document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );	
                 document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false);	
 
-                image = new Image();
-                image.src = "images/qr101.jpg";
                 gameLoop();
             }
 
