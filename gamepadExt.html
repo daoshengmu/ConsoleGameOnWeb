@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<!--
+A demo project for Web Gamepad and Gamepad extension API.
+https://github.com/w3c/gamepad 
+author: daoshengmu, http://dsmu.me
+date: 10/08/2016
+-->
+
+<html lang="en">
+
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+  <meta content="utf-8" http-equiv="encoding">
+  <meta content="width=600" name="viewport">
+  <title>HTML5 Gamepad Extension Tester</title>
+  <link href="css/style.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #222222;
+    }
+  </style>
+</head>
+
+<body>
+  <h1 class="gamepadInfo">Welcome to Gamepad Extension test page.</h1>
+  <p class="gamepadInfo">Display all gamepads that have connented to your computer already.</p>
+  <div id="gamepadList">
+  </div>
+  <script type="text/javascript">
+    var rAF = window.requestAnimationFrame ||
+      window.mozRequestAnimationFrame ||
+      window.webkitRequestAnimationFrame;
+
+    var rAFStop = window.cancelRequestAnimationFrame ||
+      window.mozCancelRequestAnimationFrame ||
+      window.webkitCancelRequestAnimationFrame;
+
+    var timeThreshold = 5000;
+    var lastTime = 0;
+
+    // var Button : {
+    //   pressed: false,
+    //   touched: false,
+    //   value: 0.0
+    // };
+
+    var GamepadState = {
+      id: '',
+      index: 0,
+      connected: false,
+      timestamp: 0,
+      mappingType: '',
+      axes: [],
+      button: []
+    };
+
+    var gamepadManager = [];
+    var inited = false;
+
+    function addGamepadTest() {
+      var GamepadService = navigator.requestGamepadServiceTest();
+      
+      GamepadService.addGamepad("test gamepad 1",
+                            GamepadService.standardMapping,
+                            GamepadService.noHand,
+                            4,
+                            2,
+                            0).then(function(i) {
+                              index = i;
+                              // Press a button to make the gamepad visible
+                              // to the page.
+                              GamepadService.newButtonEvent(index, 0, true, true);
+                              GamepadService.newButtonEvent(index, 0, true, true);
+                            });
+    }
+
+    function init() {
+      //
+      addGamepadTest();
+      //
+      animate();
+      inited = true;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // if (numGamepads != navigator.getGamepads().length) {
+      //   var countElement = document.getElementById('gamepadCount');
+      //   countElement.textContent = 'You have ' + navigator.getGamepads().length +
+      //     ' gamepads.';
+      //   numGamepads = navigator.getGamepads().length;
+
+      //   for (var i = 0; i <= numGamepads; ++i) {
+      //     var gamepad = navigator.getGamepads()[i];
+      //     countElement.textContent += gamepad.hand + ', ';
+      //   }
+      // }
+
+      // var txtElement = document.getElementById('textDiv');
+      // var currentTime = Date.now();
+      // if (currentTime - lastTime > timeThreshold) {
+      //   // Remove all existing elements
+      //   while (txtElement.firstChild) {
+      //     txtElement.removeChild(txtElement.firstChild);
+      //   }
+
+      //   lastTime = currentTime;
+      // }
+
+      var gamepads = navigator.getGamepads();
+
+      if (!inited ||
+        (gamepads.length != gamepadManager.length)) {
+        setupGamepads(gamepads);
+      }
+
+      console.log("gamepad count is: " + gamepads.length);
+
+      var count = 0;
+      var gp, state;
+      for (var i = 0; i < gamepads.length; ++i) {
+        gp = gamepads[i];
+        if (!gp)
+          continue;
+
+        state = gamepadManager[count];
+        state.id = gp.id;
+        state.index = gp.index;
+        state.connected = gp.connected;
+        state.timestamp = gp.timestamp;
+        state.mappingType = gp.mappingType;
+        state.axes = gp.axes;
+        state.button = gp.button;
+
+        ++count;
+
+        // for (var j = 0; j < gp.buttons.length; ++j) {
+        //   buttonPressed(i, gp.buttons[j], j);
+        // }
+
+        // for (var j = 0; j < gp.axes.length; ++j) {
+        //   axisPressed(i, gp.axes[j], j);
+        // }
+
+        //   poseState(i, gp.pose);
+
+      }
+    }
+
+    function setupGamepads(gamepads) {
+      gamepadManager.length = 0;
+      var gpList = document.querySelector('#gamepadList');
+      while (gpList.firstChild) {
+        gpList.removeChild(gpList.firstChild);
+      }
+
+      if (!gamepads.length) {
+        var gpLabel = document.createElement('div');
+        var info = document.createElement('h2');
+        info.innerHTML = 'no active gamepads';
+        gpLabel.appendChild(info);
+        gpList.appendChild(gpLabel);
+
+        return;
+      }
+
+      var state, gp;
+      for (var i = 0; i < gamepads.length; ++i) {
+        gp = gamepads[i];
+        if (!gp)
+          continue;
+
+        state = new GamepadState();
+
+        state.id = gp.id;
+        state.index = gp.index;
+        state.connected = gp.connected;
+        state.timestamp = gp.timestamp;
+        state.mappingType = gp.mappingType;
+        state.axes.push(gp.axes);
+        state.buttons.push(gp.buttons);
+      }
+    }
+
+    function highlightChanges(item) {
+      item.className += ' gamepadHighLight';
+    }
+    // var count = 0;
+    // function testGamepad() {
+    //   var div = $('#gamepad2PoseTxt')[0];
+    //   count++;
+    //   div.textContent = count;
+    // }
+
+    // function buttonPressed(gamepadIdx, btn, index) {
+
+    //   if (typeof (btn) == "object") {
+    //     if (btn.pressed || btn.value) {
+    //       var txt = 'receive gamepadIdx ' + gamepadIdx +
+    //         ' button ' + index + ' pressed';
+
+    //       var txtElement = document.getElementById('textDiv');
+    //       var node = document.createElement('h2');
+    //       node.textContent = txt;
+
+    //       txtElement.appendChild(node);
+
+    //       // if (index === 3) {
+    //       //   var gamepads = navigator.getGamepads();
+    //       //   gamepads[gamepadIdx].hapticActuators[0].pulse(btn.value, 5000);
+    //       // }
+    //     }
+    //   }
+    // }
+
+    // function axisPressed(gamepadIdx, axis, index) {
+    //   if (axis != 0) {
+    //     var txt = 'receive gamepadIdx ' + gamepadIdx +
+    //       ' axis ' + index + ' value ' + axis;
+
+    //     var txtElement = document.getElementById('textDiv');
+    //     var node = document.createElement('h2');
+    //     node.textContent = txt;
+
+    //     txtElement.appendChild(node);
+    //   }
+    // }
+
+    // function poseState(gamepadIdx, pose) {
+    //   if (pose) {
+    //     var txt = 'receive gamepadIdx ' + gamepadIdx +
+    //       ' position ' + pose.position +
+    //       ' linearVelocity ' + pose.linearVelocity +
+    //       ' linearAcceleration ' + pose.linearAcceleration +
+    //       ' orientation ' + pose.orientation +
+    //       ' angularVelocity ' + pose.angularVelocity +
+    //       ' angularAcceleration ' + pose.angularAcceleration;
+
+
+    //     var txtElement = document.getElementById('textDiv');
+    //     var node = document.createElement('h2');
+    //     node.textContent = txt;
+
+    //     txtElement.appendChild(node);
+    //   }
+    // }
+
+    init();
+  </script>
+</body>
+
+</html>
