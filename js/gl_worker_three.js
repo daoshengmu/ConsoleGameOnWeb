@@ -10,6 +10,7 @@ var canvas;
 var lastNumOfBalls = 0;
 var vrDeviceEffect;
 var enableVR = false;
+var usingRAF = false; 
 
 onmessage = function(evt) {
 	var window = self;
@@ -138,6 +139,9 @@ onmessage = function(evt) {
 		postMessage( "Send script to main script: Finish initialization." );
 		bInit = true;
 
+		if (usingRAF) {
+			requestAnimationFrame(workerAnimation);
+		}
 		return;
 
 	} else if (typeof evt.data.canvasWidth !== 'undefined' 
@@ -189,7 +193,9 @@ onmessage = function(evt) {
 									quaternions[4 * i + 3] );
 		}
 
-		workerAnimation();
+		if (!usingRAF) {
+			workerAnimation();
+		}
 		postMessage({ cameraState: cameraState, positions:positions, quaternions:quaternions}
 			, [ cameraState.buffer, positions.buffer, quaternions.buffer ]);
 	}
@@ -225,7 +231,11 @@ function generateBalls(num) {
 }
 
 function workerAnimation() {
-	render();	
+	render();
+
+	if (usingRAF) {
+		requestAnimationFrame(workerAnimation);
+	}
 }
 
 function render() {
@@ -236,7 +246,7 @@ function render() {
 		vrDeviceEffect.render(scene, camera);
 	}
 
-	renderer.context.commit();
+//	renderer.context.commit(); // FIXME: It doesn't support in Chrome
 }
 
 function onWindowResize(width, height) {
